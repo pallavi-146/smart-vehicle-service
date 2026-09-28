@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Management - Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background: #f0f2f5; font-family: 'Poppins', sans-serif; }
+        .container { margin-top: 30px; margin-bottom: 30px; }
+        .card { border: none; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .card-header { background: linear-gradient(135deg, #0f0c29, #302b63); color: white; }
+        .btn-back { background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 10px; margin-bottom: 20px; }
+        .summary-card { text-align: center; padding: 20px; border-radius: 15px; color: white; margin-bottom: 20px; }
+        .bg-gradient-purple { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .bg-gradient-green { background: linear-gradient(135deg, #11998e, #38ef7d); }
+        .bg-gradient-orange { background: linear-gradient(135deg, #f2994a, #f2c94c); }
+        .bg-gradient-red { background: linear-gradient(135deg, #eb3349, #f45c43); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="btn-back" onclick="window.location.href='/admin-dashboard'"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>
+        
+        <div class="row">
+            <div class="col-md-3"><div class="summary-card bg-gradient-purple"><i class="fas fa-rupee-sign fa-3x"></i><h2 id="totalRevenue">₹0</h2><p>Total Revenue</p></div></div>
+            <div class="col-md-3"><div class="summary-card bg-gradient-green"><i class="fas fa-check-circle fa-3x"></i><h2 id="successPayments">0</h2><p>Successful Payments</p></div></div>
+            <div class="col-md-3"><div class="summary-card bg-gradient-orange"><i class="fas fa-clock fa-3x"></i><h2 id="pendingPayments">0</h2><p>Pending Payments</p></div></div>
+            <div class="col-md-3"><div class="summary-card bg-gradient-red"><i class="fas fa-chart-line fa-3x"></i><h2 id="thisMonthRevenue">₹0</h2><p>This Month</p></div></div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8"><div class="card"><div class="card-header"><i class="fas fa-history"></i> Payment Transactions</div><div class="card-body"><div class="table-responsive"><table class="table"><thead class="table-light"><tr><th>Date</th><th>Transaction ID</th><th>Booking ID</th><th>Customer</th><th>Amount</th><th>Method</th><th>Status</th><th>Action</th></tr></thead><tbody id="paymentsTableBody"><tr><td colspan="8" class="text-center">Loading...<td></tr></tbody></table></div></div></div></div>
+            <div class="col-md-4"><div class="card"><div class="card-header"><i class="fas fa-chart-pie"></i> Payment Methods</div><div class="card-body"><canvas id="paymentMethodChart"></canvas></div></div></div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login';
+        
+        let allPayments = [];
+
+        async function loadPayments() {
+            try {
+                const response = await fetch('/api/payments/history', { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await response.json();
+                if (data.success) {
+                    allPayments = data.payments;
+                    displayPayments();
+                    calculateSummary();
+                    drawChart();
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        function displayPayments() {
+            if (allPayments.length === 0) {
+                document.getElementById('paymentsTableBody').innerHTML = '<tr><td colspan="8" class="text-center">No payments found</td></tr>';
+                return;
+            }
+            document.getElementById('paymentsTableBody').innerHTML = allPayments.map(p => `
+                <tr>
+                    <td>${new Date(p.createdAt).toLocaleDateString()}</td>
+                    <td><code>${p.transactionId?.slice(-10) || 'N/A'}</code></td>
+                    <td>${p.bookingId?.slice(-8) || 'N/A'}</td>
+                    <td>User ${p.userId?.slice(-6) || 'N/A'}</td>
+                    <td><strong>₹${p.amount}</strong></td>
+                    <td><span class="badge bg-info">${p.method}</span></td>
+                    <td><span class="badge ${p.status === 'success' ? 'bg-success' : 'bg-danger'}">${p.status}</span></td>
+                    <td><button class="btn btn-sm btn-primary" onclick="viewPayment('${p._id}')"><i class="fas fa-print"></i> Receipt</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function calculateSummary() {
+            const total = allPayments.reduce((sum, p) => sum + (p.status === 'success' ? p.amount : 0), 0);
+            const success = allPayments.filter(p => p.status === 'success').length;
+            const pending = allPayments.filter(p => p.status === 'pending').length;
+            const currentMonth = new Date().getMonth();
+            const monthRevenue = allPayments.filter(p => p.status === 'success' && new Date(p.createdAt).getMonth() === currentMonth).reduce((sum, p) => sum + p.amount, 0);
+            
+            document.getElementById('totalRevenue').innerHTML = '₹' + total.toLocaleString();
+            document.getElementById('successPayments').innerText = success;
+            document.getElementById('pendingPayments').innerText = pending;
+            document.getElementById('thisMonthRevenue').innerHTML = '₹' + monthRevenue.toLocaleString();
+        }
+
+        function drawChart() {
+            const qrCount = allPayments.filter(p => p.method === 'QR').length;
+            const codCount = allPayments.filter(p => p.method === 'COD').length;
+            const cardCount = allPayments.filter(p => p.method === 'Card').length;
+            
+            new Chart(document.getElementById('paymentMethodChart'), {
+                type: 'doughnut',
+                data: { labels: ['QR Code', 'Cash on Delivery', 'Card'], datasets: [{ data: [qrCount, codCount, cardCount], backgroundColor: ['#667eea', '#28a745', '#ffc107'] }] }
+            });
+        }
+
+        function viewPayment(id) {
+            Swal.fire('Payment Receipt', `Payment ID: ${id}`, 'info');
+        }
+
+        loadPayments();
+    </script>
+</body>
+</html>

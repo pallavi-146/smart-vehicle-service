@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Booking</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <div style="text-align:center; margin-top:50px;">
+        <h2>Test Booking API</h2>
+        <button onclick="testBooking()" style="padding:20px 50px; font-size:20px; background:red; color:white; border:none; border-radius:10px; cursor:pointer;">
+            🔴 CLICK TO TEST BOOKING
+        </button>
+        <div id="result" style="margin-top:20px;"></div>
+    </div>
+
+    <script>
+        async function testBooking() {
+            const token = localStorage.getItem('token');
+            document.getElementById('result').innerHTML = 'Checking token...';
+
+            if (!token) {
+                document.getElementById('result').innerHTML = '❌ Please login first! <a href="/login">Login</a>';
+                return;
+            }
+
+            document.getElementById('result').innerHTML = 'Sending booking...';
+
+            try {
+                const response = await fetch('/api/bookings/create', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        serviceType: 'Oil Change',
+                        vehicleModel: 'Swift',
+                        vehicleNumber: 'KA01AB1234',
+                        preferredDate: new Date().toISOString().split('T')[0],
+                        estimatedCost: 500
+                    })
+                });
+
+                const data = await response.json();
+                document.getElementById('result').innerHTML = `
+                    <pre style="background:#f0f0f0; padding:20px; text-align:left;">
+                        Response: ${JSON.stringify(data, null, 2)}
+                    </pre>
+                `;
+
+                if (data.success) {
+                    Swal.fire('✅ Success!', 'Booking created. Check your email!', 'success');
+                } else {
+                    Swal.fire('❌ Error', data.message, 'error');
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = '❌ Network Error: ' + error.message;
+                Swal.fire('Network Error', error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

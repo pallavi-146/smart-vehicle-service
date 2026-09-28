@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Bookings - Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { background: #f0f2f5; font-family: 'Poppins', sans-serif; }
+        .container { margin-top: 30px; margin-bottom: 30px; }
+        .card { border: none; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .card-header { background: linear-gradient(135deg, #0f0c29, #302b63); color: white; }
+        .btn-back { background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 10px; margin-bottom: 20px; }
+        .badge-pending { background: #ffc107; color: #333; padding: 5px 10px; border-radius: 20px; }
+        .badge-approved { background: #17a2b8; color: white; padding: 5px 10px; border-radius: 20px; }
+        .badge-assigned { background: #fd7e14; color: white; padding: 5px 10px; border-radius: 20px; }
+        .badge-completed { background: #28a745; color: white; padding: 5px 10px; border-radius: 20px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <button class="btn-back" onclick="window.location.href='/admin-dashboard'"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>
+
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-calendar-alt"></i> All Service Bookings
+            <button class="btn btn-sm btn-light float-end" onclick="loadBookings()"><i class="fas fa-sync-alt"></i> Refresh</button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr><th>ID</th><th>Customer</th><th>Service</th><th>Vehicle</th><th>Date</th><th>Amount</th><th>Status</th><th>Payment</th><th>Assign Mechanic</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="bookingsTableBody">
+                        <tr><td colspan="10" class="text-center py-5">Loading bookings... <i class="fas fa-spinner fa-spin"></i></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Assign Mechanic Modal -->
+<div class="modal fade" id="assignModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Assign Mechanic</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="assignBookingId">
+                <div class="mb-3">
+                    <label>Select Mechanic</label>
+                    <select id="mechanicSelect" class="form-control" required>
+                        <option value="">-- Select Mechanic --</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="confirmAssign()">Assign</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = '/login';
+
+    let allMechanics = [];
+
+    async function fetchAPI(endpoint, method = 'GET', data = null) {
+        const options = {
+            method,
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+        };
+        if (data) options.body = JSON.stringify(data);
+        const response = await fetch(endpoint, options);
+        return response.json();
+    }
+
+    async function loadBookings() {
+        try {
+            const res = await fetchAPI('/api/admin/bookings');
+            if (res.success) {
+                displayBookings(res.bookings);
+            }
+        } catch (error) {
+            console.error('Error loading bookings:', error);
+        }
+    }
+
+    async function loadMechanics() {
+        const res = await fetchAPI('/api/admin/mechanics');
+        if (res.success) {
+            allMechanics = res.mechanics;
+            const select = document.getElementById('mechanicSelect');
+            select.innerHTML = '<option value="">-- Select Mechanic --</option>' + 
+                allMechanics.map(m => `<option value="${m._id}">${m.name} - ${m.specialization || 'General'}</option>`).join('');
+        }
+    }
+
+    function displayBookings(bookings) {
+        const tbody = document.getElementById('bookingsTableBody');
+        if (!bookings || bookings.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center">No bookings found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = bookings.map(b => `
+            <tr>
+                <td>${b._id.slice(-8)}</td>
+                <td><strong>${b.userId?.name || 'N/A'}</strong><br><small>${b.userId?.phone || ''}</small></td>
+                <td>${b.serviceType || 'N/A'}</td>
+                <td>${b.vehicleModel || 'N/A'}</td>
+                <td>${new Date(b.preferredDate).toLocaleDateString()}</td>
+                <td>₹${b.estimatedCost || b.finalCost || 0}</td>
+                <td><span class="badge-${b.status}">${b.status}</span></td>
+                <td><span class="badge ${b.paymentStatus === 'paid' ? 'bg-success' : 'bg-warning'}">${b.paymentStatus || 'pending'}</span></td>
+                <td>
+                    ${b.status === 'approved' ? 
+                        `<button class="btn btn-sm btn-primary" onclick="openAssignModal('${b._id}')">
+                            <i class="fas fa-user-cog"></i> Assign
+                        </button>` : 
+                        (b.mechanicId?.name || 'Not assigned')}
+                 </td>
+                <td>
+                    ${b.status === 'pending' ? 
+                        `<button class="btn btn-sm btn-success" onclick="approveBooking('${b._id}')">
+                            <i class="fas fa-check"></i> Approve
+                        </button>` : ''}
+                 </td>
+            `
+        ).join('');
+    }
+
+    async function approveBooking(id) {
+        const res = await fetchAPI(`/api/admin/approve-booking/${id}`, 'PUT');
+        if (res.success) {
+            Swal.fire('Approved!', 'Booking approved', 'success');
+            loadBookings();
+        } else {
+            Swal.fire('Error', res.message, 'error');
+        }
+    }
+
+    function openAssignModal(bookingId) {
+        document.getElementById('assignBookingId').value = bookingId;
+        loadMechanics();
+        new bootstrap.Modal(document.getElementById('assignModal')).show();
+    }
+
+    async function confirmAssign() {
+        const bookingId = document.getElementById('assignBookingId').value;
+        const mechanicId = document.getElementById('mechanicSelect').value;
+        
+        if (!mechanicId) {
+            Swal.fire('Error', 'Please select a mechanic', 'error');
+            return;
+        }
+        
+        const res = await fetchAPI('/api/admin/assign-mechanic', 'PUT', { bookingId, mechanicId });
+        if (res.success) {
+            Swal.fire('Assigned!', 'Mechanic assigned successfully', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('assignModal')).hide();
+            loadBookings();
+        } else {
+            Swal.fire('Error', res.message, 'error');
+        }
+    }
+
+    loadBookings();
+</script>
+</body>
+</html>

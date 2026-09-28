@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Booking - Smart Vehicle Service</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .card { background: white; border-radius: 28px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); overflow: hidden; }
+        .card-header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 24px 28px; font-size: 24px; font-weight: 700; }
+        .step-indicator { display: flex; justify-content: space-between; background: white; padding: 20px 28px 0 28px; border-bottom: 1px solid #e9ecef; }
+        .step { text-align: center; flex: 1; cursor: pointer; }
+        .step-circle { width: 44px; height: 44px; background: #e9ecef; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-weight: 700; font-size: 18px; color: #495057; transition: all 0.2s; }
+        .step.active .step-circle { background: linear-gradient(135deg, #667eea, #764ba2); color: white; box-shadow: 0 6px 14px rgba(102,126,234,0.35); }
+        .step.completed .step-circle { background: #28a745; color: white; }
+        .step-label { font-size: 12px; font-weight: 500; color: #6c757d; }
+        .step.active .step-label { color: #667eea; font-weight: 600; }
+        .step-content { padding: 28px; }
+        h3 { font-size: 1.6rem; margin-bottom: 24px; color: #1e293b; font-weight: 600; }
+        .selection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 18px; margin: 20px 0 28px; }
+        .selection-card { background: white; border: 2px solid #e2e8f0; border-radius: 20px; padding: 18px 12px; text-align: center; cursor: pointer; transition: all 0.25s ease; }
+        .selection-card:hover { border-color: #667eea; transform: translateY(-4px); box-shadow: 0 12px 20px rgba(0,0,0,0.05); }
+        .selection-card.selected { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-color: transparent; }
+        .selection-card i { font-size: 36px; margin-bottom: 12px; }
+        .selection-card h5 { font-size: 16px; margin: 0; font-weight: 500; }
+        .search-input { width: 100%; padding: 12px 18px; border: 2px solid #e2e8f0; border-radius: 60px; margin-bottom: 24px; font-size: 14px; outline: none; }
+        .search-input:focus { border-color: #667eea; }
+        .price-tag { margin-top: 8px; font-size: 12px; font-weight: bold; color: #28a745; }
+        .selection-card.selected .price-tag { color: white; }
+        .service-category { margin: 20px 0 10px; padding: 10px; background: #f8fafc; border-radius: 12px; font-weight: bold; color: #667eea; }
+        .custom-model-section { margin-top: 28px; padding: 20px; background: #f8fafc; border-radius: 24px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { font-weight: 600; margin-bottom: 8px; display: block; color: #2d3e50; }
+        .form-control { width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 16px; }
+        .form-control:focus { border-color: #667eea; outline: none; }
+        .btn-nav { padding: 10px 28px; border-radius: 40px; font-weight: 600; margin-top: 16px; border: none; }
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .btn-secondary { background: #e9ecef; color: #2c3e50; }
+        .btn-primary:hover, .btn-secondary:hover { opacity: 0.9; transform: translateY(-2px); }
+        .btn-success { background: #28a745; color: white; border: none; }
+        .btn-success:hover { background: #218838; transform: translateY(-2px); }
+        .btn-danger { background: #dc3545; color: white; border: none; }
+        .btn-danger:hover { background: #c82333; transform: translateY(-2px); }
+        @media (max-width: 600px) { .selection-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; } .step-label { font-size: 10px; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <div class="card-header"><i class="fas fa-calendar-plus me-2"></i> Book a Service</div>
+        
+        <!-- 🔴 TEST BUTTON - ADDED -->
+        <div class="p-3">
+            <button onclick="directTestBooking()" class="btn btn-danger w-100" style="padding:15px; font-size:18px;">
+                🔴 DIRECT TEST BOOKING (Skip Wizard)
+            </button>
+        </div>
+        
+        <div class="step-indicator" id="stepIndicator">
+            <div class="step" data-step="1"><div class="step-circle">1</div><div class="step-label">Vehicle Type</div></div>
+            <div class="step" data-step="2"><div class="step-circle">2</div><div class="step-label">City</div></div>
+            <div class="step" data-step="3"><div class="step-circle">3</div><div class="step-label">Brand</div></div>
+            <div class="step" data-step="4"><div class="step-circle">4</div><div class="step-label">Model</div></div>
+            <div class="step" data-step="5"><div class="step-circle">5</div><div class="step-label">Fuel</div></div>
+            <div class="step" data-step="6"><div class="step-circle">6</div><div class="step-label">Service</div></div>
+        </div>
+        <div class="step-content" id="stepContent"></div>
+    </div>
+</div>
+
+<script>
+    // ============ DATA ============
+    const vehicleTypes = [
+        { id: 'car', name: 'Car', icon: 'fa-car' },
+        { id: 'bike', name: 'Bike', icon: 'fa-motorcycle' },
+        { id: 'scooter', name: 'Scooter', icon: 'fa-scooter' }
+    ];
+
+    const cities = [
+        'Bengaluru', 'Mysuru', 'Hubballi', 'Dharwad', 'Belagavi', 'Mangaluru',
+        'Kalaburagi', 'Davanagere', 'Ballari', 'Shivamogga', 'Tumakuru', 'Raichur',
+        'Bidar', 'Hassan', 'Mandya', 'Kolar', 'Udupi', 'Chitradurga', 'Gadag',
+        'Haveri', 'Koppal', 'Bagalkot', 'Vijayapura', 'Yadgir', 'Chamarajanagar',
+        'Kodagu (Madikeri)', 'Ramanagara', 'Chikkaballapur'
+    ];
+
+    const carBrands = ['Maruti Suzuki', 'Hyundai', 'Honda', 'TATA', 'Ford', 'Mahindra', 'Toyota', 'Kia', 'Skoda'];
+
+    const modelsByBrand = {
+        'Maruti Suzuki': ['Swift', 'Baleno', 'Brezza', 'Grand Vitara', 'Ertiga', 'Alto K10', 'S-Presso', 'Wagon-R', 'Fronx', 'Victories'],
+        'Hyundai': ['i10', 'i20', 'Creta', 'Grand i10 NIOS'],
+        'Honda': ['City', 'Amaze', 'City Hybrid'],
+        'TATA': ['Nexon', 'Tata Punch', 'Tata Tiago', 'Tata Altroz', 'Tata Tigor'],
+        'Ford': ['Ford EcoSport', 'Ford Endeavour', 'Ford Fiesta', 'Ford Focus', 'Ford Mondeo'],
+        'Mahindra': ['Mahindra Thar', 'Mahindra Scorpio', 'Mahindra XUV 3XO', 'Mahindra Bolero', 'Mahindra Bolero Neo'],
+        'Toyota': ['Fortuner', 'Innova Hycross', 'Toyota Crysta', 'Glanza', 'Luxurious Camry'],
+        'Kia': ['Seltos', 'Sonet', 'Carens', 'Syros'],
+        'Skoda': ['Skoda Kylaq', 'Skoda Kushaq', 'Skoda Slavia', 'Skoda Kodiaq', 'Skoda Octavia']
+    };
+
+    const bikeBrands = ['Hero', 'Honda', 'Pulsar', 'TVS Apache', 'FZ', 'R15', 'MT-15', 'Royal Enfield Classic 350', 'Bullet', 'KTM Duke 200', 'KTM RC 200'];
+    const scooterBrands = ['Honda Activa', 'Dio', 'TVS Jupiter', 'Suzuki Access', 'Yamaha Fascino'];
+
+    const fuels = [
+        { id: 'petrol', name: 'Petrol', icon: 'fa-gas-pump' },
+        { id: 'cng', name: 'CNG', icon: 'fa-industry' },
+        { id: 'diesel', name: 'Diesel', icon: 'fa-oil-can' }
+    ];
+
+    const carServicesHigh = [
+        { name: 'General Service', price: 2800 }, { name: 'Oil Change', price: 5600 },
+        { name: 'Car Wash', price: 800 }, { name: 'AC Service', price: 4500 },
+        { name: 'Wheel Alignment', price: 1400 }, { name: 'Battery Replacement', price: 6000 },
+        { name: 'Tyre Replacement', price: 24000 }, { name: 'Dent Paint', price: 60000 },
+        { name: 'Engine Repair', price: 125000 }, { name: 'Suspension Repair', price: 25000 }
+    ];
+    const carServicesLow = [
+        { name: 'General Service', price: 1800 }, { name: 'Oil Change', price: 4500 },
+        { name: 'Car Wash', price: 600 }, { name: 'AC Service', price: 3500 },
+        { name: 'Wheel Alignment', price: 1000 }, { name: 'Battery Replacement', price: 5000 },
+        { name: 'Tyre Replacement', price: 52000 }, { name: 'Dent Paint', price: 30000 },
+        { name: 'Engine Repair', price: 70000 }, { name: 'Suspension Repair', price: 13000 }
+    ];
+
+    const bikeServicesStandard = [
+        { name: 'Bike Service', price: 599 }, { name: 'Oil Change', price: 600 },
+        { name: 'Bike Wash', price: 200 }, { name: 'Engine Tuning', price: 10000 },
+        { name: 'Tyre Change', price: 3000 }, { name: 'Battery Check', price: 900 }
+    ];
+    const bikeServicesPremium = [
+        { name: 'General Service', price: 1300 }, { name: 'Oil Change', price: 800 },
+        { name: 'General Wash', price: 400 }, { name: 'Engine Tuning', price: 1550 },
+        { name: 'Tyre Change', price: 430 }, { name: 'Battery Check', price: 450 },
+        { name: 'Chain Lube & Cleaner Spray', price: 400 }, { name: 'Chain Tensioner / Adjuster', price: 150 }
+    ];
+
+    const scooterServices = [
+        { name: 'General Service', price: 599 }, { name: 'Oil Change', price: 600 },
+        { name: 'General Wash', price: 200 }, { name: 'Engine Tuning', price: 10000 },
+        { name: 'Tyre Change', price: 3000 }, { name: 'Battery Charge', price: 900 }
+    ];
+
+    const premiumBikeModels = ['FZ', 'R15', 'MT-15', 'Royal Enfield Classic 350', 'Bullet', 'KTM Duke 200', 'KTM RC 200'];
+
+    let selected = { vehicleType: null, city: null, brand: null, model: null, fuel: null, service: null, servicePrice: null };
+    let currentStep = 1;
+    let currentServices = [];
+
+    // ============ DIRECT TEST BOOKING ============
+    async function directTestBooking() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            Swal.fire('Error', 'Please login first', 'error');
+            return;
+        }
+
+        Swal.fire({
+            title: 'Sending Test Booking...',
+            text: 'Please wait',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        try {
+            const response = await fetch('/api/bookings/create', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    serviceType: 'Oil Change',
+                    vehicleModel: 'Swift',
+                    vehicleNumber: 'KA01AB1234',
+                    preferredDate: new Date().toISOString().split('T')[0],
+                    estimatedCost: 500
+                })
+            });
+
+            const data = await response.json();
+            console.log('Test Response:', data);
+            Swal.close();
+
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '✅ Booking Created!',
+                    text: 'Email should arrive in your inbox now.',
+                    confirmButtonText: 'OK'
+                });
+            } else {
+                Swal.fire('Error', data.message || 'Booking failed', 'error');
+            }
+        } catch (error) {
+            Swal.close();
+            Swal.fire('Network Error', error.message, 'error');
+        }
+    }
+
+    // ============ WIZARD FUNCTIONS ============
+    function updateStepIndicator() {
+        document.querySelectorAll('.step').forEach((stepDiv, idx) => {
+            const stepNum = idx + 1;
+            stepDiv.classList.remove('active', 'completed');
+            if (stepNum < currentStep) stepDiv.classList.add('completed');
+            else if (stepNum === currentStep) stepDiv.classList.add('active');
+        });
+    }
+
+    function renderStep() {
+        const container = document.getElementById('stepContent');
+        if (!container) return;
+        if (currentStep === 1) renderVehicleType(container);
+        else if (currentStep === 2) renderCity(container);
+        else if (currentStep === 3) renderBrand(container);
+        else if (currentStep === 4) renderModel(container);
+        else if (currentStep === 5) renderFuel(container);
+        else if (currentStep === 6) renderService(container);
+        updateStepIndicator();
+    }
+
+    // Step 1: Vehicle Type
+    function renderVehicleType(container) {
+        container.innerHTML = `<h3>Select Vehicle Type</h3><div class="selection-grid" id="vehicleGrid"></div><div class="text-end"><button class="btn btn-primary btn-nav" id="nextBtn1">Next →</button></div>`;
+        const grid = document.getElementById('vehicleGrid');
+        vehicleTypes.forEach(v => {
+            const card = document.createElement('div');
+            card.className = `selection-card ${selected.vehicleType === v.id ? 'selected' : ''}`;
+            card.innerHTML = `<i class="fas ${v.icon}"></i><h5>${v.name}</h5>`;
+            card.onclick = () => {
+                document.querySelectorAll('#vehicleGrid .selection-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                selected.vehicleType = v.id;
+                selected.brand = null;
+                selected.model = null;
+                selected.service = null;
+                selected.servicePrice = null;
+            };
+            grid.appendChild(card);
+        });
+        document.getElementById('nextBtn1').onclick = () => {
+            if (selected.vehicleType) { currentStep = 2; renderStep(); }
+            else Swal.fire('Oops', 'Please select vehicle type', 'warning');
+        };
+    }
+
+    // Step 2: City
+    function renderCity(container) {
+        container.innerHTML = `<h3>Choose Your City</h3><input type="text" id="citySearch" class="search-input" placeholder="🔍 Search city..."><div class="selection-grid" id="cityGrid"></div><div class="d-flex justify-content-between"><div></div><div><button class="btn btn-secondary btn-nav me-2" id="prevBtn2">← Back</button><button class="btn btn-primary btn-nav" id="nextBtn2">Next →</button></div></div>`;
+        function renderCities(filter = '') {
+            const filtered = cities.filter(c => c.toLowerCase().includes(filter.toLowerCase()));
+            const grid = document.getElementById('cityGrid');
+            grid.innerHTML = filtered.map(c => `<div class="selection-card ${selected.city === c ? 'selected' : ''}" data-city="${c}"><i class="fas fa-city"></i><h5>${c}</h5></div>`).join('');
+            document.querySelectorAll('#cityGrid .selection-card').forEach(card => {
+                card.onclick = () => {
+                    document.querySelectorAll('#cityGrid .selection-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    selected.city = card.getAttribute('data-city');
+                };
+            });
+        }
+        renderCities();
+        document.getElementById('citySearch').addEventListener('input', (e) => renderCities(e.target.value));
+        document.getElementById('prevBtn2').onclick = () => { currentStep = 1; renderStep(); };
+        document.getElementById('nextBtn2').onclick = () => {
+            if (selected.city) { currentStep = 3; renderStep(); }
+            else Swal.fire('Oops', 'Please select a city', 'warning');
+        };
+    }
+
+    // Step 3: Brand
+    function renderBrand(container) {
+        if (!selected.vehicleType) { currentStep = 1; renderStep(); return; }
+        if (selected.vehicleType === 'bike' || selected.vehicleType === 'scooter') {
+            currentStep = 4;
+            renderStep();
+            return;
+        }
+        container.innerHTML = `<h3>Select Brand</h3><input type="text" id="brandSearch" class="search-input" placeholder="🔍 Search brand..."><div class="selection-grid" id="brandGrid"></div><div class="d-flex justify-content-end"><button class="btn btn-secondary btn-nav me-2" id="prevBtn3">← Back</button><button class="btn btn-primary btn-nav" id="nextBtn3">Next →</button></div>`;
+        function renderBrands(filter = '') {
+            const filtered = carBrands.filter(b => b.toLowerCase().includes(filter.toLowerCase()));
+            const grid = document.getElementById('brandGrid');
+            grid.innerHTML = filtered.map(b => `<div class="selection-card ${selected.brand === b ? 'selected' : ''}" data-brand="${b}"><i class="fas fa-building"></i><h5>${b}</h5></div>`).join('');
+            document.querySelectorAll('#brandGrid .selection-card').forEach(card => {
+                card.onclick = () => {
+                    document.querySelectorAll('#brandGrid .selection-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    selected.brand = card.getAttribute('data-brand');
+                    selected.model = null;
+                };
+            });
+        }
+        renderBrands();
+        document.getElementById('brandSearch').addEventListener('input', (e) => renderBrands(e.target.value));
+        document.getElementById('prevBtn3').onclick = () => { currentStep = 2; renderStep(); };
+        document.getElementById('nextBtn3').onclick = () => {
+            if (selected.brand) { currentStep = 4; renderStep(); }
+            else Swal.fire('Oops', 'Please select a brand', 'warning');
+        };
+    }
+
+    // Step 4: Model
+    function renderModel(container) {
+        if (selected.vehicleType === 'car' && !selected.brand) { currentStep = 3; renderStep(); return; }
+        let models = [];
+        if (selected.vehicleType === 'car') {
+            models = modelsByBrand[selected.brand] || [];
+        } else if (selected.vehicleType === 'bike') {
+            models = bikeBrands;
+        } else if (selected.vehicleType === 'scooter') {
+            models = scooterBrands;
+        }
+        container.innerHTML = `<h3>Select Model</h3><input type="text" id="modelSearch" class="search-input" placeholder="🔍 Search model..."><div class="selection-grid" id="modelGrid"></div><div class="d-flex justify-content-between"><div></div><div><button class="btn btn-secondary btn-nav me-2" id="prevBtn4">← Back</button><button class="btn btn-primary btn-nav" id="nextBtn4">Next →</button></div></div>`;
+        function renderModels(filter = '') {
+            const filtered = models.filter(m => m.toLowerCase().includes(filter.toLowerCase()));
+            const grid = document.getElementById('modelGrid');
+            grid.innerHTML = filtered.map(m => `<div class="selection-card ${selected.model === m ? 'selected' : ''}" data-model="${m}"><i class="fas fa-car"></i><h5>${m}</h5></div>`).join('');
+            document.querySelectorAll('#modelGrid .selection-card').forEach(card => {
+                card.onclick = () => {
+                    document.querySelectorAll('#modelGrid .selection-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    selected.model = card.getAttribute('data-model');
+                };
+            });
+        }
+        renderModels();
+        document.getElementById('modelSearch').addEventListener('input', (e) => renderModels(e.target.value));
+        document.getElementById('prevBtn4').onclick = () => {
+            if (selected.vehicleType === 'car') { currentStep = 3; }
+            else { currentStep = 2; }
+            renderStep();
+        };
+        document.getElementById('nextBtn4').onclick = () => {
+            if (selected.model) { currentStep = 5; renderStep(); }
+            else Swal.fire('Oops', 'Please select a model', 'warning');
+        };
+    }
+
+    // Step 5: Fuel
+    function renderFuel(container) {
+        container.innerHTML = `<h3>Select Fuel Type</h3><div class="selection-grid" id="fuelGrid"></div><div class="d-flex justify-content-end"><button class="btn btn-secondary btn-nav me-2" id="prevBtn5">← Back</button><button class="btn btn-primary btn-nav" id="nextBtn5">Next →</button></div>`;
+        const grid = document.getElementById('fuelGrid');
+        fuels.forEach(f => {
+            const card = document.createElement('div');
+            card.className = `selection-card ${selected.fuel === f.id ? 'selected' : ''}`;
+            card.innerHTML = `<i class="fas ${f.icon}"></i><h5>${f.name}</h5>`;
+            card.onclick = () => {
+                document.querySelectorAll('#fuelGrid .selection-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                selected.fuel = f.id;
+            };
+            grid.appendChild(card);
+        });
+        document.getElementById('prevBtn5').onclick = () => { currentStep = 4; renderStep(); };
+        document.getElementById('nextBtn5').onclick = () => {
+            if (selected.fuel) { currentStep = 6; renderStep(); }
+            else Swal.fire('Oops', 'Please select fuel type', 'warning');
+        };
+    }
+
+    // Step 6: Service
+    function renderService(container) {
+        let servicesHtml = `<h3>Choose a Service</h3>`;
+        
+        if (selected.vehicleType === 'car') {
+            servicesHtml += `<div class="service-category">💰 High Price Services</div><div class="selection-grid" id="highServiceGrid"></div>`;
+            servicesHtml += `<div class="service-category mt-3">🛡️ Low Price Services</div><div class="selection-grid" id="lowServiceGrid"></div>`;
+        } else if (selected.vehicleType === 'bike') {
+            if (premiumBikeModels.includes(selected.model)) {
+                currentServices = bikeServicesPremium;
+            } else {
+                currentServices = bikeServicesStandard;
+            }
+            servicesHtml += `<div class="selection-grid" id="serviceGrid"></div>`;
+        } else if (selected.vehicleType === 'scooter') {
+            currentServices = scooterServices;
+            servicesHtml += `<div class="selection-grid" id="serviceGrid"></div>`;
+        }
+        
+        servicesHtml += `<div class="form-group"><label>Vehicle Number *</label><input type="text" id="vehicleNumber" class="form-control" placeholder="KA01AB1234"></div>`;
+        servicesHtml += `<div class="form-group"><label>Service Date *</label><input type="date" id="serviceDate" class="form-control"></div>`;
+        servicesHtml += `<div class="form-group"><label>Additional Description</label><textarea id="description" class="form-control" rows="2"></textarea></div>`;
+        servicesHtml += `<div class="d-flex justify-content-between mt-4"><button class="btn btn-secondary btn-nav" id="prevBtn6">← Back</button><button class="btn btn-success btn-nav px-4" id="submitBookingBtn">Confirm Booking</button></div>`;
+        
+        container.innerHTML = servicesHtml;
+        
+        if (selected.vehicleType === 'car') {
+            const highGrid = document.getElementById('highServiceGrid');
+            const lowGrid = document.getElementById('lowServiceGrid');
+            carServicesHigh.forEach(s => {
+                const card = document.createElement('div');
+                card.className = `selection-card ${selected.service === s.name ? 'selected' : ''}`;
+                card.innerHTML = `<i class="fas fa-wrench"></i><h5>${s.name}</h5><div class="price-tag">₹${s.price.toLocaleString()}</div>`;
+                card.onclick = () => {
+                    document.querySelectorAll('#highServiceGrid .selection-card, #lowServiceGrid .selection-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    selected.service = s.name;
+                    selected.servicePrice = s.price;
+                };
+                highGrid.appendChild(card);
+            });
+            carServicesLow.forEach(s => {
+                const card = document.createElement('div');
+                card.className = `selection-card ${selected.service === s.name ? 'selected' : ''}`;
+                card.innerHTML = `<i class="fas fa-wrench"></i><h5>${s.name}</h5><div class="price-tag">₹${s.price.toLocaleString()}</div>`;
+                card.onclick = () => {
+                    document.querySelectorAll('#highServiceGrid .selection-card, #lowServiceGrid .selection-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    selected.service = s.name;
+                    selected.servicePrice = s.price;
+                };
+                lowGrid.appendChild(card);
+            });
+        } else {
+            const grid = document.getElementById('serviceGrid');
+            if (grid) {
+                currentServices.forEach(s => {
+                    const card = document.createElement('div');
+                    card.className = `selection-card ${selected.service === s.name ? 'selected' : ''}`;
+                    card.innerHTML = `<i class="fas fa-wrench"></i><h5>${s.name}</h5><div class="price-tag">₹${s.price.toLocaleString()}</div>`;
+                    card.onclick = () => {
+                        document.querySelectorAll('#serviceGrid .selection-card').forEach(c => c.classList.remove('selected'));
+                        card.classList.add('selected');
+                        selected.service = s.name;
+                        selected.servicePrice = s.price;
+                    };
+                    grid.appendChild(card);
+                });
+            }
+        }
+        
+        const today = new Date().toISOString().split('T')[0];
+        const dateInput = document.getElementById('serviceDate');
+        if (dateInput) dateInput.min = today;
+        
+        document.getElementById('prevBtn6').onclick = () => { currentStep = 5; renderStep(); };
+        document.getElementById('submitBookingBtn').onclick = submitBooking;
+    }
+
+    // ============ SUBMIT BOOKING ============
+    async function submitBooking() {
+        const vehicleNumber = document.getElementById('vehicleNumber').value.trim();
+        const serviceDate = document.getElementById('serviceDate').value;
+        const description = document.getElementById('description').value;
+        
+        if (!selected.service) { Swal.fire('Missing', 'Please select a service', 'warning'); return; }
+        if (!vehicleNumber) { Swal.fire('Missing', 'Please enter vehicle number', 'warning'); return; }
+        if (!serviceDate) { Swal.fire('Missing', 'Please select service date', 'warning'); return; }
+        
+        const token = localStorage.getItem('token');
+        if (!token) { window.location.href = '/login'; return; }
+        
+        const bookingData = {
+            serviceType: selected.service,
+            vehicleModel: selected.model,
+            vehicleNumber: vehicleNumber,
+            preferredDate: serviceDate,
+            description: description,
+            estimatedCost: selected.servicePrice,
+            vehicleDetails: { type: selected.vehicleType, brand: selected.brand, model: selected.model, fuel: selected.fuel },
+            location: { city: selected.city, address: selected.city }
+        };
+        
+        try {
+            const response = await fetch('/api/bookings/create', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(bookingData)
+            });
+            const data = await response.json();
+            if (data.success) {
+                Swal.fire({ icon: 'success', title: 'Booking Confirmed!', text: 'Your service has been booked successfully.', confirmButtonText: 'OK' })
+                    .then(() => { window.location.href = '/user-dashboard'; });
+            } else {
+                Swal.fire('Error', data.message || 'Booking failed', 'error');
+            }
+        } catch (err) {
+            Swal.fire('Network Error', 'Please check your connection', 'error');
+        }
+    }
+
+    function attachStepClickEvents() {
+        document.querySelectorAll('.step').forEach(stepDiv => {
+            stepDiv.addEventListener('click', () => {
+                const stepNum = parseInt(stepDiv.getAttribute('data-step'));
+                if (stepNum < currentStep) { currentStep = stepNum; renderStep(); }
+                else if (stepNum !== currentStep) { Swal.fire('Info', 'Please complete current step first', 'info'); }
+            });
+        });
+    }
+
+    renderStep();
+    attachStepClickEvents();
+</script>
+</body>
+</html>

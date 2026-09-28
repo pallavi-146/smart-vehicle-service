@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment - Smart Vehicle Service</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { background: #f0f2f5; font-family: 'Poppins', sans-serif; }
+        .container { margin-top: 30px; margin-bottom: 30px; }
+        .card { border: none; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .card-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px 15px 0 0; padding: 15px 20px; }
+        .btn-back { background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 10px; margin-bottom: 20px; }
+        .qr-container { text-align: center; padding: 20px; background: white; border-radius: 15px; margin-top: 20px; }
+        .receipt-container { background: white; border-radius: 15px; padding: 20px; margin-top: 20px; border: 2px solid #28a745; }
+        .receipt-header { text-align: center; border-bottom: 2px dashed #ddd; padding-bottom: 15px; }
+        .receipt-detail { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+        .payment-success { background: #d4edda; color: #155724; padding: 15px; border-radius: 10px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="btn-back" onclick="window.location.href='/user-dashboard'"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header"><i class="fas fa-credit-card"></i> Make Payment</div>
+                    <div class="card-body">
+                        <div class="form-group mb-3">
+                            <label>Select Booking</label>
+                            <select id="paymentBooking" class="form-control" onchange="updateAmount()">
+                                <option value="">Select a booking to pay</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label>Payment Method</label>
+                            <select id="paymentMethod" class="form-control">
+                                <option value="QR">QR Code Scan (UPI - Google Pay/PhonePe/Paytm)</option>
+                                <option value="COD">Cash on Delivery</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label>Amount to Pay</label>
+                            <input type="text" id="paymentAmount" class="form-control" readonly>
+                        </div>
+                        <button id="payNowBtn" class="btn btn-success w-100"><i class="fas fa-rupee-sign"></i> Pay Now</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <!-- QR Code Container -->
+                <div id="qrCodeContainer" style="display: none;">
+                    <div class="card">
+                        <div class="card-header"><i class="fas fa-qrcode"></i> Scan QR Code</div>
+                        <div class="card-body qr-container">
+                            <img id="qrCodeImg" src="" style="width: 250px; margin: 20px;">
+                            <p class="mt-3"><i class="fas fa-mobile-alt"></i> Scan this QR code using any UPI app</p>
+                            <p class="text-muted">Supported: Google Pay, PhonePe, Paytm, BHIM</p>
+                            <button id="paymentSuccessBtn" class="btn btn-success mt-2">✅ I have completed the payment</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Receipt Container -->
+                <div id="receiptContainer" style="display: none;">
+                    <div class="receipt-container">
+                        <div class="receipt-header">
+                            <h4><i class="fas fa-receipt"></i> Payment Receipt</h4>
+                            <p class="text-muted">Smart Vehicle Service</p>
+                        </div>
+                        <div id="receiptContent">
+                            <div class="receipt-detail"><span>Booking ID</span><span id="receiptBookingId">-</span></div>
+                            <div class="receipt-detail"><span>Service</span><span id="receiptService">-</span></div>
+                            <div class="receipt-detail"><span>Amount Paid</span><span id="receiptAmount">-</span></div>
+                            <div class="receipt-detail"><span>Payment Method</span><span id="receiptMethod">-</span></div>
+                            <div class="receipt-detail"><span>Transaction ID</span><span id="receiptTransaction">-</span></div>
+                            <div class="receipt-detail"><span>Date</span><span id="receiptDate">-</span></div>
+                            <div class="receipt-detail"><span>Status</span><span><span class="badge bg-success">Paid ✅</span></span></div>
+                        </div>
+                        <div class="text-center mt-3">
+                            <button onclick="downloadReceipt()" class="btn btn-primary"><i class="fas fa-download"></i> Download Invoice (PDF)</button>
+                            <button onclick="window.print()" class="btn btn-secondary"><i class="fas fa-print"></i> Print</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment History -->
+        <div class="card mt-4">
+            <div class="card-header"><i class="fas fa-history"></i> Payment History</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr><th>Date</th><th>Booking ID</th><th>Service</th><th>Amount</th><th>Method</th><th>Status</th><th>Invoice</th></tr>
+                        </thead>
+                        <tbody id="paymentHistory">
+                            <tr><td colspan="7" class="text-center">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login';
+
+        let selectedBookingId = null;
+        let latestInvoiceData = null;
+
+        async function loadPendingPayments() {
+            const response = await fetch('/api/user/bookings', { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await response.json();
+            if (data.success) {
+                const pendingPayments = data.bookings.filter(b => b.paymentStatus === 'pending' && b.status !== 'cancelled');
+                const select = document.getElementById('paymentBooking');
+                if (pendingPayments.length === 0) {
+                    select.innerHTML = '<option value="">No pending payments</option>';
+                } else {
+                    select.innerHTML = '<option value="">Select a booking</option>' + pendingPayments.map(b => `<option value="${b._id}" data-amount="${b.estimatedCost || b.finalCost}" data-service="${b.serviceType}">${b._id.slice(-8)} - ${b.serviceType} - ₹${b.estimatedCost || b.finalCost}</option>`).join('');
+                }
+            }
+        }
+
+        function updateAmount() {
+            const select = document.getElementById('paymentBooking');
+            const selectedOption = select.options[select.selectedIndex];
+            const amount = selectedOption.getAttribute('data-amount');
+            selectedBookingId = select.value;
+            document.getElementById('paymentAmount').value = amount ? '₹' + amount : '';
+        }
+
+        document.getElementById('payNowBtn').addEventListener('click', async () => {
+            const bookingId = document.getElementById('paymentBooking').value;
+            const method = document.getElementById('paymentMethod').value;
+            const amount = document.getElementById('paymentAmount').value.replace('₹', '');
+            
+            if (!bookingId) {
+                Swal.fire('Error', 'Please select a booking', 'error');
+                return;
+            }
+
+            if (method === 'QR') {
+                const response = await fetch('/api/payments/generate-qr', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount, bookingId })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('qrCodeContainer').style.display = 'block';
+                    document.getElementById('qrCodeImg').src = data.qrCode;
+                } else {
+                    Swal.fire('Error', 'Failed to generate QR code', 'error');
+                }
+            } else {
+                // COD
+                const payment = await fetch('/api/payments/process', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ bookingId, amount: parseFloat(amount), method: 'COD', transactionId: 'COD-' + Date.now() })
+                });
+                const result = await payment.json();
+                if (result.success) {
+                    showReceipt(result);
+                } else {
+                    Swal.fire('Error', result.message, 'error');
+                }
+            }
+        });
+
+        document.getElementById('paymentSuccessBtn').addEventListener('click', async () => {
+            const amount = document.getElementById('paymentAmount').value.replace('₹', '');
+            const payment = await fetch('/api/payments/process', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bookingId: selectedBookingId, amount: parseFloat(amount), method: 'QR', transactionId: 'QR-' + Date.now() })
+            });
+            const result = await payment.json();
+            if (result.success) {
+                document.getElementById('qrCodeContainer').style.display = 'none';
+                showReceipt(result);
+            } else {
+                Swal.fire('Error', result.message, 'error');
+            }
+        });
+
+        function showReceipt(result) {
+            latestInvoiceData = result.invoice;
+            
+            document.getElementById('receiptBookingId').innerText = selectedBookingId.slice(-8);
+            document.getElementById('receiptService').innerText = document.getElementById('paymentBooking').options[document.getElementById('paymentBooking').selectedIndex]?.getAttribute('data-service') || 'N/A';
+            document.getElementById('receiptAmount').innerText = document.getElementById('paymentAmount').value;
+            document.getElementById('receiptMethod').innerText = document.getElementById('paymentMethod').value;
+            document.getElementById('receiptTransaction').innerText = result.payment?.transactionId || 'N/A';
+            document.getElementById('receiptDate').innerText = new Date().toLocaleString();
+            
+            document.getElementById('receiptContainer').style.display = 'block';
+            Swal.fire('Success!', 'Payment successful! Receipt generated.', 'success');
+        }
+
+        async function downloadReceipt() {
+            if (latestInvoiceData) {
+                const link = document.createElement('a');
+                link.download = `invoice_${selectedBookingId}.pdf`;
+                link.href = 'data:application/pdf;base64,' + latestInvoiceData;
+                link.click();
+                Swal.fire('Downloading', 'Invoice is being downloaded', 'info');
+            } else {
+                Swal.fire('Error', 'No invoice available', 'error');
+            }
+        }
+
+        async function loadPaymentHistory() {
+            const response = await fetch('/api/payments/history', { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await response.json();
+            if (data.success && data.payments.length > 0) {
+                document.getElementById('paymentHistory').innerHTML = data.payments.map(p => `
+                    <tr>
+                        <td>${new Date(p.createdAt).toLocaleDateString()}</td>
+                        <td>${p.bookingId?._id?.slice(-8) || p.bookingId}</td>
+                        <td>${p.bookingId?.serviceType || 'N/A'}</td>
+                        <td>₹${p.amount}</td>
+                        <td>${p.method}</td>
+                        <td><span class="badge bg-success">${p.status}</span></td>
+                        <td><button class="btn btn-sm btn-info" onclick="downloadInvoice('${p.bookingId?._id || p.bookingId}')"><i class="fas fa-download"></i> Invoice</button></td>
+                    </tr>
+                `).join('');
+            } else {
+                document.getElementById('paymentHistory').innerHTML = '<tr><td colspan="7" class="text-center">No payment history</td></tr>';
+            }
+        }
+
+        async function downloadInvoice(bookingId) {
+            const response = await fetch('/api/payments/generate-invoice', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bookingId })
+            });
+            const data = await response.json();
+            if (data.success) {
+                const link = document.createElement('a');
+                link.download = `invoice_${bookingId}.pdf`;
+                link.href = 'data:application/pdf;base64,' + data.invoice;
+                link.click();
+            }
+        }
+
+        loadPendingPayments();
+        loadPaymentHistory();
+    </script>
+</body>
+</html>

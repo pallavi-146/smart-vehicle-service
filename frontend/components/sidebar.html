@@ -1,0 +1,315 @@
+<!-- Sidebar Component -->
+<div class="sidebar" id="appSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo">
+            <i class="fas fa-car"></i>
+            <span>Smart Service</span>
+        </div>
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+    
+    <div class="sidebar-user" id="sidebarUser">
+        <div class="user-avatar" id="userAvatar">U</div>
+        <div class="user-info">
+            <h5 id="userName">User Name</h5>
+            <p id="userRole">User</p>
+        </div>
+    </div>
+    
+    <nav class="sidebar-nav">
+        <ul>
+            <li>
+                <a href="#" data-page="dashboard" class="active">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" data-page="bookings">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>My Bookings</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" data-page="new-booking">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>New Booking</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" data-page="payment">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Payments</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" data-page="history">
+                    <i class="fas fa-history"></i>
+                    <span>History</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" data-page="profile">
+                    <i class="fas fa-user"></i>
+                    <span>Profile</span>
+                </a>
+            </li>
+            <li class="divider"></li>
+            <li>
+                <a href="#" id="logoutSidebarBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+<style>
+    .sidebar {
+        width: 280px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        padding: 20px;
+        transition: all 0.3s ease;
+        z-index: 1000;
+        overflow-y: auto;
+    }
+    
+    .sidebar.collapsed {
+        width: 80px;
+    }
+    
+    .sidebar.collapsed .sidebar-logo span,
+    .sidebar.collapsed .user-info,
+    .sidebar.collapsed .sidebar-nav span {
+        display: none;
+    }
+    
+    .sidebar.collapsed .sidebar-header {
+        justify-content: center;
+    }
+    
+    .sidebar.collapsed .user-avatar {
+        margin: 0 auto;
+    }
+    
+    .sidebar.collapsed .sidebar-nav a {
+        justify-content: center;
+    }
+    
+    .sidebar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .sidebar-logo {
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+    
+    .sidebar-logo i {
+        margin-right: 8px;
+    }
+    
+    .sidebar-toggle {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        width: 35px;
+        height: 35px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .sidebar-toggle:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+    
+    .sidebar-user {
+        text-align: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .user-avatar {
+        width: 70px;
+        height: 70px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        font-size: 28px;
+        font-weight: bold;
+    }
+    
+    .user-info h5 {
+        margin: 0;
+        font-size: 1rem;
+    }
+    
+    .user-info p {
+        margin: 5px 0 0;
+        font-size: 0.75rem;
+        opacity: 0.8;
+    }
+    
+    .sidebar-nav ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .sidebar-nav li {
+        margin-bottom: 5px;
+    }
+    
+    .sidebar-nav a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 15px;
+        color: white;
+        text-decoration: none;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .sidebar-nav a:hover,
+    .sidebar-nav a.active {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateX(5px);
+    }
+    
+    .sidebar-nav a i {
+        width: 20px;
+        font-size: 1rem;
+    }
+    
+    .divider {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.2);
+        margin: 15px 0;
+    }
+    
+    /* Main content adjustment */
+    .main-content {
+        margin-left: 280px;
+        transition: all 0.3s ease;
+    }
+    
+    .main-content.expanded {
+        margin-left: 80px;
+    }
+    
+    /* Dark mode styles */
+    body.dark-mode .sidebar {
+        background: linear-gradient(135deg, #1a1a2e, #16213e);
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .sidebar {
+            transform: translateX(-100%);
+        }
+        
+        .sidebar.mobile-open {
+            transform: translateX(0);
+        }
+        
+        .main-content {
+            margin-left: 0 !important;
+        }
+    }
+</style>
+
+<script>
+    // Sidebar functionality
+    function initSidebar() {
+        const sidebar = document.getElementById('appSidebar');
+        const toggleBtn = document.getElementById('sidebarToggle');
+        const mainContent = document.querySelector('.main-content');
+        
+        // Toggle sidebar collapse
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('collapsed');
+                if (mainContent) {
+                    mainContent.classList.toggle('expanded');
+                }
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+            });
+        }
+        
+        // Load saved state
+        const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
+        if (savedState && sidebar) {
+            sidebar.classList.add('collapsed');
+            if (mainContent) mainContent.classList.add('expanded');
+        }
+        
+        // Load user data
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const userNameElem = document.getElementById('userName');
+        const userRoleElem = document.getElementById('userRole');
+        const userAvatarElem = document.getElementById('userAvatar');
+        
+        if (userNameElem) userNameElem.innerText = user.name || 'Guest';
+        if (userRoleElem) userRoleElem.innerText = user.role || 'User';
+        if (userAvatarElem) userAvatarElem.innerText = (user.name || 'U').charAt(0).toUpperCase();
+        
+        // Active link highlighting
+        const currentPage = localStorage.getItem('currentPage') || 'dashboard';
+        document.querySelectorAll('.sidebar-nav a[data-page]').forEach(link => {
+            if (link.getAttribute('data-page') === currentPage) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
+            
+            link.addEventListener('click', (e) => {
+                const page = link.getAttribute('data-page');
+                if (page) {
+                    localStorage.setItem('currentPage', page);
+                    document.querySelectorAll('.sidebar-nav a').forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                }
+            });
+        });
+        
+        // Logout
+        const logoutBtn = document.getElementById('logoutSidebarBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Logout?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes'
+                }).then(result => {
+                    if (result.isConfirmed) {
+                        localStorage.clear();
+                        window.location.href = '/login';
+                    }
+                });
+            });
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', initSidebar);
+</script>

@@ -1,0 +1,401 @@
+<!-- Notification Bell Component -->
+<div class="notification-bell-wrapper">
+    <div class="notification-bell" id="notificationBell">
+        <i class="fas fa-bell"></i>
+        <span class="notification-count" id="notificationCount">0</span>
+    </div>
+    
+    <!-- Notification Dropdown -->
+    <div class="notification-dropdown" id="notificationDropdown">
+        <div class="dropdown-header">
+            <h5>Notifications</h5>
+            <button class="mark-all-read" id="markAllRead">Mark all as read</button>
+        </div>
+        <div class="dropdown-body" id="notificationList">
+            <div class="text-center py-3 text-muted">Loading...</div>
+        </div>
+        <div class="dropdown-footer">
+            <a href="/pages/user/user-notifications.html">View All Notifications</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .notification-bell-wrapper {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .notification-bell {
+        position: relative;
+        cursor: pointer;
+        font-size: 1.3rem;
+        color: #667eea;
+        transition: all 0.3s ease;
+    }
+    
+    .notification-bell:hover {
+        transform: scale(1.1);
+    }
+    
+    .notification-count {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: #dc3545;
+        color: white;
+        font-size: 10px;
+        font-weight: bold;
+        padding: 2px 6px;
+        border-radius: 50%;
+        min-width: 18px;
+        text-align: center;
+    }
+    
+    .notification-dropdown {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        width: 350px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+        display: none;
+        margin-top: 10px;
+        overflow: hidden;
+    }
+    
+    .notification-dropdown.show {
+        display: block;
+        animation: slideDown 0.3s ease;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .dropdown-header {
+        padding: 12px 15px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .dropdown-header h5 {
+        margin: 0;
+        font-size: 1rem;
+    }
+    
+    .mark-all-read {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        font-size: 0.75rem;
+        padding: 4px 10px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .mark-all-read:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+    
+    .dropdown-body {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .notification-item {
+        padding: 12px 15px;
+        border-bottom: 1px solid #eee;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        gap: 12px;
+    }
+    
+    .notification-item:hover {
+        background: #f8f9fa;
+    }
+    
+    .notification-item.unread {
+        background: #e8f0fe;
+    }
+    
+    .notification-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    
+    .notification-icon.sos {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .notification-icon.booking {
+        background: #28a745;
+        color: white;
+    }
+    
+    .notification-icon.payment {
+        background: #17a2b8;
+        color: white;
+    }
+    
+    .notification-icon.reminder {
+        background: #ffc107;
+        color: #333;
+    }
+    
+    .notification-icon.system {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .notification-content {
+        flex: 1;
+    }
+    
+    .notification-title {
+        font-weight: 600;
+        font-size: 0.85rem;
+        margin-bottom: 4px;
+    }
+    
+    .notification-message {
+        font-size: 0.75rem;
+        color: #666;
+        margin-bottom: 4px;
+    }
+    
+    .notification-time {
+        font-size: 0.7rem;
+        color: #999;
+    }
+    
+    .dropdown-footer {
+        padding: 10px 15px;
+        text-align: center;
+        border-top: 1px solid #eee;
+    }
+    
+    .dropdown-footer a {
+        color: #667eea;
+        text-decoration: none;
+        font-size: 0.8rem;
+    }
+    
+    .dropdown-footer a:hover {
+        text-decoration: underline;
+    }
+    
+    /* Dark mode */
+    body.dark-mode .notification-dropdown {
+        background: #1e1e2e;
+        border: 1px solid #2d2d3d;
+    }
+    
+    body.dark-mode .notification-item {
+        border-bottom-color: #2d2d3d;
+    }
+    
+    body.dark-mode .notification-item:hover {
+        background: #2d2d3d;
+    }
+    
+    body.dark-mode .notification-item.unread {
+        background: #1a2a3d;
+    }
+    
+    body.dark-mode .notification-message {
+        color: #aaa;
+    }
+    
+    body.dark-mode .dropdown-footer {
+        border-top-color: #2d2d3d;
+    }
+    
+    /* Responsive */
+    @media (max-width: 576px) {
+        .notification-dropdown {
+            width: 300px;
+            right: -80px;
+        }
+    }
+</style>
+
+<script>
+    // Notification Bell Functionality
+    let notifications = [];
+    
+    async function loadNotifications() {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        
+        try {
+            const response = await fetch('/api/notifications', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            
+            if (data.success && data.notifications) {
+                notifications = data.notifications;
+                updateNotificationBell();
+                renderNotificationList();
+            } else {
+                // Demo notifications
+                notifications = [
+                    { _id: '1', title: 'Booking Confirmed', message: 'Your oil change booking has been confirmed', type: 'booking', isRead: false, createdAt: new Date() },
+                    { _id: '2', title: 'Payment Received', message: 'Payment of ₹500 received successfully', type: 'payment', isRead: false, createdAt: new Date() },
+                    { _id: '3', title: 'Service Reminder', message: 'Your next service is due in 7 days', type: 'reminder', isRead: true, createdAt: new Date() }
+                ];
+                updateNotificationBell();
+                renderNotificationList();
+            }
+        } catch (error) {
+            console.error('Error loading notifications:', error);
+        }
+    }
+    
+    function updateNotificationBell() {
+        const unreadCount = notifications.filter(n => !n.isRead).length;
+        const countBadge = document.getElementById('notificationCount');
+        if (countBadge) {
+            countBadge.innerText = unreadCount;
+            countBadge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+        }
+    }
+    
+    function renderNotificationList() {
+        const container = document.getElementById('notificationList');
+        if (!container) return;
+        
+        if (notifications.length === 0) {
+            container.innerHTML = '<div class="text-center py-3 text-muted">No notifications</div>';
+            return;
+        }
+        
+        container.innerHTML = notifications.slice(0, 5).map(n => {
+            let iconClass = 'system';
+            let icon = 'fas fa-bell';
+            
+            switch(n.type) {
+                case 'sos': iconClass = 'sos'; icon = 'fas fa-ambulance'; break;
+                case 'booking': iconClass = 'booking'; icon = 'fas fa-calendar-check'; break;
+                case 'payment': iconClass = 'payment'; icon = 'fas fa-credit-card'; break;
+                case 'reminder': iconClass = 'reminder'; icon = 'fas fa-clock'; break;
+                default: iconClass = 'system'; icon = 'fas fa-bell';
+            }
+            
+            return `
+                <div class="notification-item ${!n.isRead ? 'unread' : ''}" onclick="markAsRead('${n._id}')">
+                    <div class="notification-icon ${iconClass}">
+                        <i class="${icon}"></i>
+                    </div>
+                    <div class="notification-content">
+                        <div class="notification-title">${n.title}</div>
+                        <div class="notification-message">${n.message}</div>
+                        <div class="notification-time">${formatTime(n.createdAt)}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    function formatTime(date) {
+        const d = new Date(date);
+        const now = new Date();
+        const diff = now - d;
+        
+        if (diff < 60000) return 'Just now';
+        if (diff < 3600000) return `${Math.floor(diff / 60000)} min ago`;
+        if (diff < 86400000) return `${Math.floor(diff / 3600000)} hours ago`;
+        return d.toLocaleDateString();
+    }
+    
+    async function markAsRead(id) {
+        const token = localStorage.getItem('token');
+        const notification = notifications.find(n => n._id === id);
+        if (notification && !notification.isRead) {
+            notification.isRead = true;
+            updateNotificationBell();
+            renderNotificationList();
+            
+            // Update on server
+            try {
+                await fetch(`/api/notifications/${id}/read`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+            } catch (error) {
+                console.error('Error marking as read:', error);
+            }
+        }
+    }
+    
+    async function markAllAsRead() {
+        const token = localStorage.getItem('token');
+        notifications.forEach(n => n.isRead = true);
+        updateNotificationBell();
+        renderNotificationList();
+        
+        try {
+            await fetch('/api/notifications/read-all', {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+        } catch (error) {
+            console.error('Error marking all as read:', error);
+        }
+    }
+    
+    // Toggle dropdown
+    document.addEventListener('DOMContentLoaded', () => {
+        const bell = document.getElementById('notificationBell');
+        const dropdown = document.getElementById('notificationDropdown');
+        const markAllBtn = document.getElementById('markAllRead');
+        
+        if (bell) {
+            bell.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdown.classList.toggle('show');
+                loadNotifications();
+            });
+        }
+        
+        if (markAllBtn) {
+            markAllBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                markAllAsRead();
+            });
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', () => {
+            if (dropdown) dropdown.classList.remove('show');
+        });
+        
+        if (bell && dropdown) {
+            bell.addEventListener('click', (e) => e.stopPropagation());
+            dropdown.addEventListener('click', (e) => e.stopPropagation());
+        }
+        
+        loadNotifications();
+    });
+</script>

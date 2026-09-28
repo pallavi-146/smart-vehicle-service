@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Smart Vehicle Service</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f0f2f5;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            padding: 20px;
+            transition: all 0.3s;
+            z-index: 100;
+            overflow-y: auto;
+        }
+
+        .sidebar h3 {
+            margin-bottom: 30px;
+            font-size: 1.3rem;
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .sidebar h3 i {
+            margin-right: 10px;
+            color: #ff4d4d;
+        }
+
+        .sidebar nav a {
+            display: block;
+            padding: 12px 15px;
+            margin: 5px 0;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+
+        .sidebar nav a:hover {
+            background: #ff4d4d;
+            transform: translateX(5px);
+        }
+
+        .sidebar nav a.active {
+            background: #ff4d4d;
+        }
+
+        .sidebar nav a i {
+            margin-right: 10px;
+            width: 25px;
+        }
+
+        /* Content Styles */
+        .content {
+            margin-left: 280px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .welcome h4 {
+            margin: 0;
+            color: #333;
+        }
+
+        .welcome p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .admin-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification-icon {
+            position: relative;
+            cursor: pointer;
+            font-size: 22px;
+            color: #667eea;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4d4d;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 50%;
+        }
+
+        .admin-avatar {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        /* Stat Cards */
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .stat-card i {
+            font-size: 45px;
+            margin-bottom: 15px;
+        }
+
+        .stat-card h2 {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .stat-card p {
+            color: #666;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .stat-card .trend {
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .trend-up { color: #28a745; }
+        .trend-down { color: #dc3545; }
+
+        /* Common Card Styles */
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #0f0c29, #302b63);
+            color: white;
+            border-radius: 15px 15px 0 0;
+            padding: 15px 20px;
+            font-weight: 600;
+        }
+
+        .card-header i {
+            margin-right: 8px;
+        }
+
+        /* Table Styles */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .badge-pending {
+            background: #ffc107;
+            color: #333;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+        }
+
+        .badge-approved {
+            background: #17a2b8;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+        }
+
+        .badge-completed {
+            background: #28a745;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+        }
+
+        .badge-cancelled {
+            background: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+        }
+
+        .badge-in-progress {
+            background: #fd7e14;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+        }
+
+        /* Quick Actions */
+        .quick-action-btn {
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            background: #f8f9fa;
+            margin-bottom: 10px;
+        }
+
+        .quick-action-btn:hover {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 80px;
+                padding: 15px 10px;
+            }
+            .sidebar h3 {
+                font-size: 0;
+                text-align: center;
+            }
+            .sidebar h3 i {
+                font-size: 24px;
+                margin-right: 0;
+            }
+            .sidebar nav a span {
+                display: none;
+            }
+            .sidebar nav a i {
+                margin-right: 0;
+                font-size: 20px;
+            }
+            .content {
+                margin-left: 80px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stat-card h2 {
+                font-size: 24px;
+            }
+            .stat-card i {
+                font-size: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h3><i class="fas fa-crown"></i> <span>Admin Panel</span></h3>
+        <nav>
+            <a href="#" class="active" data-page="dashboard">
+                <i class="fas fa-tachometer-alt"></i> <span>Dashboard</span>
+            </a>
+            <a href="#" data-page="users">
+                <i class="fas fa-users"></i> <span>Manage Users</span>
+            </a>
+            <a href="#" data-page="mechanics">
+                <i class="fas fa-wrench"></i> <span>Manage Mechanics</span>
+            </a>
+            <a href="#" data-page="bookings">
+                <i class="fas fa-calendar-alt"></i> <span>All Bookings</span>
+            </a>
+            <a href="#" data-page="payments">
+                <i class="fas fa-credit-card"></i> <span>Payments</span>
+            </a>
+            <a href="#" data-page="reports">
+                <i class="fas fa-chart-line"></i> <span>Reports</span>
+            </a>
+            <a href="#" data-page="notifications">
+                <i class="fas fa-bell"></i> <span>Notifications</span>
+            </a>
+            <a href="#" id="logoutBtn">
+                <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="welcome">
+                <h4>Welcome back, <span id="adminName">Admin</span>!</h4>
+                <p>Here's what's happening with your vehicle service business today.</p>
+            </div>
+            <div class="admin-info">
+                <div class="notification-icon" onclick="loadNotificationsPage()">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge" id="notificationCount">0</span>
+                </div>
+                <div class="admin-avatar" id="adminAvatar">A</div>
+            </div>
+        </div>
+
+        <!-- Dashboard Content (Default View) -->
+        <div id="dashboardContent">
+            <!-- Statistics Cards -->
+            <div class="row" id="statsRow">
+                <div class="col-md-3 col-sm-6">
+                    <div class="stat-card text-center" onclick="goToUsers()">
+                        <i class="fas fa-users text-primary"></i>
+                        <h2 id="totalUsers">0</h2>
+                        <p>Total Users</p>
+                        <div class="trend trend-up"><i class="fas fa-arrow-up"></i> +12% this month</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="stat-card text-center" onclick="goToMechanics()">
+                        <i class="fas fa-wrench text-warning"></i>
+                        <h2 id="totalMechanics">0</h2>
+                        <p>Active Mechanics</p>
+                        <div class="trend trend-up"><i class="fas fa-arrow-up"></i> +5% this month</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="stat-card text-center" onclick="goToBookings()">
+                        <i class="fas fa-calendar-check text-success"></i>
+                        <h2 id="totalBookings">0</h2>
+                        <p>Total Bookings</p>
+                        <div class="trend trend-up"><i class="fas fa-arrow-up"></i> +23% this month</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="stat-card text-center" onclick="goToPayments()">
+                        <i class="fas fa-rupee-sign text-info"></i>
+                        <h2 id="totalRevenue">₹0</h2>
+                        <p>Total Revenue</p>
+                        <div class="trend trend-up"><i class="fas fa-arrow-up"></i> +18% this month</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-chart-line"></i> Revenue Overview (Last 6 Months)
+                        </div>
+                        <div class="card-body">
+                            <canvas id="revenueChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-chart-pie"></i> Booking Status Distribution
+                        </div>
+                        <div class="card-body">
+                            <canvas id="statusChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Bookings Table -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-history"></i> Recent Bookings
+                    <button class="btn btn-sm btn-light float-end" onclick="refreshRecentBookings()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Booking ID</th>
+                                    <th>Customer</th>
+                                    <th>Service Type</th>
+                                    <th>Vehicle</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentBookingsTable">
+                                <tr><td colspan="8" class="text-center py-4">
+                                    <i class="fas fa-spinner fa-spin"></i> Loading bookings...
+                                </td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions Row -->
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="quick-action-btn text-center" onclick="window.location.href='/pages/admin/admin-users.html'">
+                        <i class="fas fa-user-plus fa-2x mb-2"></i>
+                        <h6>Add New User</h6>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="quick-action-btn text-center" onclick="window.location.href='/pages/admin/admin-mechanics.html'">
+                        <i class="fas fa-user-cog fa-2x mb-2"></i>
+                        <h6>Add Mechanic</h6>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="quick-action-btn text-center" onclick="window.location.href='/pages/admin/admin-bookings.html'">
+                        <i class="fas fa-calendar-plus fa-2x mb-2"></i>
+                        <h6>View All Bookings</h6>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="quick-action-btn text-center" onclick="downloadReport()">
+                        <i class="fas fa-file-export fa-2x mb-2"></i>
+                        <h6>Export Report</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Other Pages (Hidden by default) -->
+        <div id="usersPage" style="display: none;">
+            <iframe src="/pages/admin/admin-users.html" style="width: 100%; height: 80vh; border: none; border-radius: 15px;"></iframe>
+        </div>
+        <div id="mechanicsPage" style="display: none;">
+            <iframe src="/pages/admin/admin-mechanics.html" style="width: 100%; height: 80vh; border: none; border-radius: 15px;"></iframe>
+        </div>
+        <div id="bookingsPage" style="display: none;">
+            <iframe src="/pages/admin/admin-bookings.html" style="width: 100%; height: 80vh; border: none; border-radius: 15px;"></iframe>
+        </div>
+        <div id="paymentsPage" style="display: none;">
+            <iframe src="/pages/admin/admin-payments.html" style="width: 100%; height: 80vh; border: none; border-radius: 15px;"></iframe>
+        </div>
+        <div id="reportsPage" style="display: none;">
+            <iframe src="/pages/admin/admin-reports.html" style="width: 100%; height: 80vh; border: none; border-radius: 15px;"></iframe>
+        </div>
+        <div id="notificationsPage" style="display: none;">
+            <iframe src="/pages/admin/admin-notifications.html" style="width: 100%; height: 80vh; border: none; border-radius: 15px;"></iframe>
+        </div>
+    </div>
+
+    <script>
+        // Get token and user data
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        // Redirect if not logged in
+        if (!token) {
+            window.location.href = '/login';
+        }
+
+        // Set admin name and avatar
+        document.getElementById('adminName').innerText = user.name || 'Admin';
+        document.getElementById('adminAvatar').innerText = (user.name || 'A').charAt(0).toUpperCase();
+
+        // Navigation between pages
+        document.querySelectorAll('.sidebar nav a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                if (link.id === 'logoutBtn') {
+                    logout();
+                    return;
+                }
+                
+                e.preventDefault();
+                
+                // Remove active class from all links
+                document.querySelectorAll('.sidebar nav a').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+                
+                // Get page name
+                const page = link.getAttribute('data-page');
+                
+                // Hide all page containers
+                document.getElementById('dashboardContent').style.display = 'none';
+                document.getElementById('usersPage').style.display = 'none';
+                document.getElementById('mechanicsPage').style.display = 'none';
+                document.getElementById('bookingsPage').style.display = 'none';
+                document.getElementById('paymentsPage').style.display = 'none';
+                document.getElementById('reportsPage').style.display = 'none';
+                document.getElementById('notificationsPage').style.display = 'none';
+                
+                // Show selected page
+                if (page === 'dashboard') {
+                    document.getElementById('dashboardContent').style.display = 'block';
+                    loadDashboardData();
+                } else if (page === 'users') {
+                    document.getElementById('usersPage').style.display = 'block';
+                } else if (page === 'mechanics') {
+                    document.getElementById('mechanicsPage').style.display = 'block';
+                } else if (page === 'bookings') {
+                    document.getElementById('bookingsPage').style.display = 'block';
+                } else if (page === 'payments') {
+                    document.getElementById('paymentsPage').style.display = 'block';
+                } else if (page === 'reports') {
+                    document.getElementById('reportsPage').style.display = 'block';
+                } else if (page === 'notifications') {
+                    document.getElementById('notificationsPage').style.display = 'block';
+                }
+            });
+        });
+
+        // API fetch helper
+        async function fetchAPI(endpoint, method = 'GET', data = null) {
+            const options = {
+                method,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            };
+            if (data) options.body = JSON.stringify(data);
+            
+            try {
+                const response = await fetch(endpoint, options);
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                return { success: false, message: error.message };
+            }
+        }
+
+        // Load dashboard data
+        async function loadDashboardData() {
+            try {
+                // Fetch stats from API
+                const statsData = await fetchAPI('/api/admin/stats');
+                
+                if (statsData.success) {
+                    document.getElementById('totalUsers').innerText = statsData.stats?.totalUsers || 0;
+                    document.getElementById('totalMechanics').innerText = statsData.stats?.totalMechanics || 0;
+                    document.getElementById('totalBookings').innerText = statsData.stats?.totalBookings || 0;
+                    document.getElementById('totalRevenue').innerText = '₹' + (statsData.stats?.totalRevenue || 0).toLocaleString();
+                } else {
+                    // Demo data for testing
+                    document.getElementById('totalUsers').innerText = '1,250';
+                    document.getElementById('totalMechanics').innerText = '48';
+                    document.getElementById('totalBookings').innerText = '3,892';
+                    document.getElementById('totalRevenue').innerText = '₹12,45,000';
+                }
+                
+                // Load recent bookings
+                await loadRecentBookings();
+                
+                // Initialize charts
+                initializeCharts();
+                
+                // Load notification count
+                await loadNotificationCount();
+                
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+
+        // Load recent bookings
+        async function loadRecentBookings() {
+            try {
+                const bookingsData = await fetchAPI('/api/admin/bookings');
+                
+                if (bookingsData.success && bookingsData.bookings) {
+                    const recentBookings = bookingsData.bookings.slice(0, 5);
+                    displayRecentBookings(recentBookings);
+                } else {
+                    // Demo data
+                    const demoBookings = [
+                        { _id: 'BK001', userId: { name: 'Rajesh Kumar' }, serviceType: 'Oil Change', vehicleModel: 'Maruti Swift', preferredDate: new Date(), estimatedCost: 500, status: 'pending' },
+                        { _id: 'BK002', userId: { name: 'Priya Singh' }, serviceType: 'Engine Repair', vehicleModel: 'Hyundai i20', preferredDate: new Date(), estimatedCost: 2500, status: 'approved' },
+                        { _id: 'BK003', userId: { name: 'Amit Patel' }, serviceType: 'AC Service', vehicleModel: 'Honda City', preferredDate: new Date(), estimatedCost: 1200, status: 'completed' }
+                    ];
+                    displayRecentBookings(demoBookings);
+                }
+            } catch (error) {
+                console.error('Error loading bookings:', error);
+            }
+        }
+
+        function displayRecentBookings(bookings) {
+            if (!bookings || bookings.length === 0) {
+                document.getElementById('recentBookingsTable').innerHTML = '<tr><td colspan="8" class="text-center">No bookings found</td></tr>';
+                return;
+            }
+            
+            document.getElementById('recentBookingsTable').innerHTML = bookings.map(booking => `
+                <tr>
+                    <td><code>${booking._id?.slice(-8) || 'N/A'}</code></td>
+                    <td><strong>${booking.userId?.name || 'N/A'}</strong><br><small class="text-muted">${booking.userId?.phone || ''}</small></td>
+                    <td>${booking.serviceType || 'N/A'}</td>
+                    <td>${booking.vehicleModel || 'N/A'}</td>
+                    <td>${new Date(booking.preferredDate).toLocaleDateString()}</td>
+                    <td>₹${booking.estimatedCost || booking.finalCost || 0}</td>
+                    <td><span class="badge-${booking.status}">${booking.status || 'pending'}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="viewBookingDetails('${booking._id}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        ${booking.status === 'pending' ? 
+                            `<button class="btn btn-sm btn-success" onclick="approveBooking('${booking._id}')">
+                                <i class="fas fa-check"></i>
+                            </button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Initialize Charts
+        function initializeCharts() {
+            // Revenue Chart
+            const revenueCtx = document.getElementById('revenueChart')?.getContext('2d');
+            if (revenueCtx) {
+                new Chart(revenueCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                        datasets: [{
+                            label: 'Revenue (₹)',
+                            data: [65000, 75000, 82000, 91000, 105000, 125000],
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { position: 'top' }
+                        }
+                    }
+                });
+            }
+
+            // Status Chart
+            const statusCtx = document.getElementById('statusChart')?.getContext('2d');
+            if (statusCtx) {
+                new Chart(statusCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Pending', 'Approved', 'In Progress', 'Completed', 'Cancelled'],
+                        datasets: [{
+                            data: [45, 32, 28, 156, 12],
+                            backgroundColor: ['#ffc107', '#17a2b8', '#fd7e14', '#28a745', '#dc3545']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { position: 'bottom' }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Load notification count
+        async function loadNotificationCount() {
+            try {
+                const notifications = await fetchAPI('/api/notifications');
+                const unreadCount = notifications.success ? notifications.notifications?.filter(n => !n.isRead).length : 3;
+                document.getElementById('notificationCount').innerText = unreadCount;
+            } catch (error) {
+                document.getElementById('notificationCount').innerText = '3';
+            }
+        }
+
+        // Refresh recent bookings
+        function refreshRecentBookings() {
+            loadRecentBookings();
+            Swal.fire('Refreshed', 'Recent bookings updated', 'success');
+        }
+
+        // Navigation functions
+        function goToUsers() {
+            document.querySelector('.sidebar nav a[data-page="users"]').click();
+        }
+
+        function goToMechanics() {
+            document.querySelector('.sidebar nav a[data-page="mechanics"]').click();
+        }
+
+        function goToBookings() {
+            document.querySelector('.sidebar nav a[data-page="bookings"]').click();
+        }
+
+        function goToPayments() {
+            document.querySelector('.sidebar nav a[data-page="payments"]').click();
+        }
+
+        function loadNotificationsPage() {
+            document.querySelector('.sidebar nav a[data-page="notifications"]').click();
+        }
+
+        // Action functions
+        async function approveBooking(bookingId) {
+            const result = await Swal.fire({
+                title: 'Approve Booking?',
+                text: 'Are you sure you want to approve this booking?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Approve'
+            });
+            
+            if (result.isConfirmed) {
+                const response = await fetchAPI(`/api/admin/approve-booking/${bookingId}`, 'PUT');
+                if (response.success) {
+                    Swal.fire('Approved!', 'Booking has been approved', 'success');
+                    loadRecentBookings();
+                } else {
+                    Swal.fire('Error', response.message || 'Failed to approve booking', 'error');
+                }
+            }
+        }
+
+        function viewBookingDetails(bookingId) {
+            Swal.fire({
+                title: 'Booking Details',
+                html: `<p><strong>Booking ID:</strong> ${bookingId}</p>
+                       <p><strong>Status:</strong> Pending Approval</p>
+                       <p><strong>Amount:</strong> ₹500</p>`,
+                icon: 'info'
+            });
+        }
+
+        function downloadReport() {
+            Swal.fire({
+                title: 'Download Report',
+                text: 'Select report type',
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Monthly Report',
+                cancelButtonText: 'Yearly Report'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    Swal.fire('Downloading', 'Monthly report is being generated', 'success');
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                    Swal.fire('Downloading', 'Yearly report is being generated', 'success');
+                }
+            });
+        }
+
+        // Logout function
+        function logout() {
+            Swal.fire({
+                title: 'Logout?',
+                text: 'Are you sure you want to logout?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Logout'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    window.location.href = '/login';
+                }
+            });
+        }
+
+        // Make functions global for onclick events
+        window.goToUsers = goToUsers;
+        window.goToMechanics = goToMechanics;
+        window.goToBookings = goToBookings;
+        window.goToPayments = goToPayments;
+        window.loadNotificationsPage = loadNotificationsPage;
+        window.approveBooking = approveBooking;
+        window.viewBookingDetails = viewBookingDetails;
+        window.refreshRecentBookings = refreshRecentBookings;
+        window.downloadReport = downloadReport;
+
+        // Load dashboard on page load
+        loadDashboardData();
+
+        // Auto refresh every 30 seconds
+        setInterval(() => {
+            if (document.getElementById('dashboardContent').style.display !== 'none') {
+                loadRecentBookings();
+            }
+        }, 30000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,224 @@
+<!-- Footer Component -->
+<footer class="footer">
+    <div class="container">
+        <div class="row">
+            <!-- About Section -->
+            <div class="col-md-4 mb-4">
+                <h5 class="footer-title">
+                    <i class="fas fa-car"></i> Smart Vehicle Service
+                </h5>
+                <p class="footer-text">
+                    Your trusted partner for all vehicle service needs. 
+                    We provide 24/7 roadside assistance, professional mechanics, 
+                    and real-time service tracking.
+                </p>
+                <div class="social-links">
+                    <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+            
+            <!-- Quick Links -->
+            <div class="col-md-2 mb-4">
+                <h5 class="footer-title">Quick Links</h5>
+                <ul class="footer-links">
+                    <li><a href="/#home"><i class="fas fa-chevron-right"></i> Home</a></li>
+                    <li><a href="/#about"><i class="fas fa-chevron-right"></i> About Us</a></li>
+                    <li><a href="/#services"><i class="fas fa-chevron-right"></i> Services</a></li>
+                    <li><a href="/#faq"><i class="fas fa-chevron-right"></i> FAQ</a></li>
+                    <li><a href="/#contact"><i class="fas fa-chevron-right"></i> Contact</a></li>
+                </ul>
+            </div>
+            
+            <!-- Services -->
+            <div class="col-md-3 mb-4">
+                <h5 class="footer-title">Our Services</h5>
+                <ul class="footer-links">
+                    <li><a href="/#services"><i class="fas fa-wrench"></i> Engine Repair</a></li>
+                    <li><a href="/#services"><i class="fas fa-oil-can"></i> Oil Change</a></li>
+                    <li><a href="/#services"><i class="fas fa-fan"></i> AC Service</a></li>
+                    <li><a href="/#services"><i class="fas fa-car-battery"></i> Battery Replacement</a></li>
+                    <li><a href="/#services"><i class="fas fa-towing"></i> Towing Service</a></li>
+                </ul>
+            </div>
+            
+            <!-- Contact Info -->
+            <div class="col-md-3 mb-4">
+                <h5 class="footer-title">Contact Info</h5>
+                <ul class="footer-contact">
+                    <li>
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>123, Service Road, Near City Mall, Mumbai - 400001</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-phone"></i>
+                        <span>+91 98765 43210</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-phone-alt"></i>
+                        <span>+91 98765 43211 (Emergency)</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-envelope"></i>
+                        <span>support@smartvehicleservice.com</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-clock"></i>
+                        <span>24/7 - All Days Open</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Bottom Bar -->
+        <div class="footer-bottom">
+            <div class="row">
+                <div class="col-md-6 text-center text-md-start">
+                    <p>&copy; 2024 Smart Vehicle Service Management System. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <p>Developed with <i class="fas fa-heart text-danger"></i> by Pallavi | Final Year Project</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<style>
+    .footer {
+        background: linear-gradient(135deg, #0f0c29, #302b63);
+        color: #ffffff;
+        padding-top: 50px;
+        margin-top: 50px;
+    }
+    
+    .footer-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+        position: relative;
+        padding-bottom: 10px;
+    }
+    
+    .footer-title::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 40px;
+        height: 3px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 3px;
+    }
+    
+    .footer-text {
+        font-size: 0.9rem;
+        line-height: 1.6;
+        opacity: 0.8;
+    }
+    
+    .footer-links,
+    .footer-contact {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .footer-links li,
+    .footer-contact li {
+        margin-bottom: 10px;
+    }
+    
+    .footer-links a {
+        color: #ffffff;
+        text-decoration: none;
+        font-size: 0.9rem;
+        opacity: 0.8;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .footer-links a:hover {
+        opacity: 1;
+        transform: translateX(5px);
+        color: #667eea;
+    }
+    
+    .footer-links a i {
+        font-size: 10px;
+    }
+    
+    .footer-contact li {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        font-size: 0.85rem;
+        opacity: 0.8;
+    }
+    
+    .footer-contact li i {
+        margin-top: 3px;
+        color: #667eea;
+    }
+    
+    .social-links {
+        display: flex;
+        gap: 12px;
+        margin-top: 15px;
+    }
+    
+    .social-link {
+        width: 36px;
+        height: 36px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .social-link:hover {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        transform: translateY(-3px);
+    }
+    
+    .footer-bottom {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 20px 0;
+        margin-top: 30px;
+        font-size: 0.8rem;
+        opacity: 0.7;
+    }
+    
+    /* Dark mode footer styles */
+    body.dark-mode .footer {
+        background: linear-gradient(135deg, #0a0a0a, #1a1a2e);
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .footer {
+            text-align: center;
+        }
+        
+        .footer-title::after {
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .footer-contact li {
+            justify-content: center;
+        }
+        
+        .social-links {
+            justify-content: center;
+        }
+    }
+</style>

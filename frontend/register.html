@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Smart Vehicle Service</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; font-family: 'Poppins', sans-serif; }
+        .register-card { background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; max-width: 500px; margin: 50px auto; }
+        .register-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; color: white; }
+        .register-body { padding: 40px; }
+        .form-control { border-radius: 10px; padding: 12px 15px; margin-bottom: 20px; }
+        .btn-register { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; padding: 12px; border-radius: 10px; font-weight: 600; width: 100%; color: white; }
+        .note { font-size: 12px; color: #666; text-align: center; margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="register-card">
+            <div class="register-header">
+                <i class="fas fa-user-plus fa-3x mb-3"></i>
+                <h2 class="mb-0">Create Account</h2>
+                <p class="mb-0">Register to get started</p>
+            </div>
+            <div class="register-body">
+                <form id="registerForm">
+                    <input type="text" id="name" class="form-control" placeholder="Full Name" required>
+                    <input type="email" id="email" class="form-control" placeholder="Email Address" required>
+                    <input type="tel" id="phone" class="form-control" placeholder="Phone Number" required>
+                    <input type="password" id="password" class="form-control" placeholder="Password" required>
+                    <!-- Mechanic option removed - Only User can register -->
+                    <input type="hidden" id="role" value="user">
+                    <button type="submit" class="btn-register">Register <i class="fas fa-arrow-right"></i></button>
+                </form>
+                <div class="note">
+                    <i class="fas fa-info-circle"></i> Only customer accounts can be created here. 
+                    Mechanic accounts are created by Admin only.
+                </div>
+                <div class="text-center mt-4">
+                    <p>Already have an account? <a href="/login">Login here</a></p>
+                    <a href="/">← Back to Home</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const password = document.getElementById('password').value;
+            const role = 'user'; // Fixed to 'user' only
+            
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password, phone, role })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    Swal.fire({ 
+                        title: 'Success!', 
+                        text: 'Registration successful! Please login.', 
+                        icon: 'success', 
+                        confirmButtonText: 'Login' 
+                    }).then(() => window.location.href = '/login');
+                } else {
+                    Swal.fire({ title: 'Error!', text: data.message, icon: 'error' });
+                }
+            } catch (error) {
+                Swal.fire({ title: 'Error!', text: 'Something went wrong', icon: 'error' });
+            }
+        });
+    </script>
+</body>
+</html>

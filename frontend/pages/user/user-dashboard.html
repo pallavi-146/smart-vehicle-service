@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard - Smart Vehicle Service</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background: #f0f2f5; }
+        .sidebar { width: 260px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; position: fixed; height: 100vh; padding: 20px; transition: all 0.3s; }
+        .sidebar h3 { margin-bottom: 30px; font-size: 1.5rem; }
+        .sidebar h3 i { margin-right: 10px; }
+        .sidebar nav a { display: block; padding: 12px 15px; margin: 5px 0; color: white; text-decoration: none; border-radius: 10px; transition: all 0.3s; }
+        .sidebar nav a:hover, .sidebar nav a.active { background: rgba(255,255,255,0.2); }
+        .sidebar nav a i { margin-right: 10px; width: 25px; }
+        .content { margin-left: 260px; padding: 20px; }
+        .top-bar { background: white; padding: 15px 25px; border-radius: 15px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .welcome h4 { margin: 0; color: #333; }
+        .welcome p { margin: 0; color: #666; font-size: 14px; }
+        .stat-card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); transition: transform 0.3s; }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-card i { font-size: 40px; color: #667eea; margin-bottom: 15px; }
+        .stat-card h2 { font-size: 32px; font-weight: bold; margin: 0; }
+        .stat-card p { color: #666; margin: 0; }
+        .sos-btn { position: fixed; bottom: 30px; right: 30px; background: red; color: white; border: none; padding: 15px 25px; border-radius: 50px; font-weight: bold; box-shadow: 0 5px 20px rgba(255,0,0,0.4); cursor: pointer; transition: all 0.3s; z-index: 1000; }
+        .sos-btn:hover { transform: scale(1.05); background: darkred; }
+        .card { border: none; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .card-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px 15px 0 0; padding: 15px 20px; font-weight: 600; }
+        .table { margin-bottom: 0; }
+        .badge-pending { background: #ffc107; color: #333; padding: 5px 10px; border-radius: 20px; font-size: 12px; }
+        .badge-approved { background: #28a745; color: white; padding: 5px 10px; border-radius: 20px; font-size: 12px; }
+        .badge-completed { background: #17a2b8; color: white; padding: 5px 10px; border-radius: 20px; font-size: 12px; }
+        .badge-cancelled { background: #dc3545; color: white; padding: 5px 10px; border-radius: 20px; font-size: 12px; }
+        @media (max-width: 768px) { .sidebar { width: 70px; padding: 15px 10px; } .sidebar h3 { font-size: 0; } .sidebar h3 i { font-size: 24px; } .sidebar nav a span { display: none; } .sidebar nav a i { margin: 0; font-size: 20px; } .content { margin-left: 70px; } }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h3><i class="fas fa-car"></i> <span>Smart Service</span></h3>
+        <nav>
+            <a href="#" class="active" data-page="dashboard"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a>
+            <a href="#" data-page="bookings"><i class="fas fa-calendar-check"></i> <span>My Bookings</span></a>
+            <!-- ✅ FIXED: New Booking link opens wizard in new page -->
+            <a href="/pages/user/new-booking-wizard.html" target="_self"><i class="fas fa-plus-circle"></i> <span>New Booking</span></a>
+            <a href="#" data-page="payment"><i class="fas fa-credit-card"></i> <span>Payments</span></a>
+            <a href="#" data-page="history"><i class="fas fa-history"></i> <span>Service History</span></a>
+            <a href="#" data-page="profile"><i class="fas fa-user"></i> <span>Profile</span></a>
+            <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+        <div class="top-bar">
+            <div class="welcome">
+                <h4>Welcome back, <span id="userName">User</span>!</h4>
+                <p>Here's what's happening with your vehicle services today.</p>
+            </div>
+            <div class="notification-bell">
+                <i class="fas fa-bell"></i>
+                <span class="notification-count" id="notificationCount">0</span>
+            </div>
+        </div>
+
+        <!-- SOS Button -->
+        <button class="sos-btn" id="sosBtn"><i class="fas fa-ambulance"></i> SOS Emergency</button>
+
+        <!-- Dashboard Content -->
+        <div id="dashboardContent">
+            <div class="row" id="statsRow">
+                <div class="col-md-3">
+                    <div class="stat-card text-center">
+                        <i class="fas fa-car"></i>
+                        <h2 id="totalBookings">0</h2>
+                        <p>Total Bookings</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card text-center">
+                        <i class="fas fa-clock"></i>
+                        <h2 id="pendingBookings">0</h2>
+                        <p>Pending</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card text-center">
+                        <i class="fas fa-check-circle"></i>
+                        <h2 id="completedBookings">0</h2>
+                        <p>Completed</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card text-center">
+                        <i class="fas fa-rupee-sign"></i>
+                        <h2 id="totalSpent">0</h2>
+                        <p>Total Spent</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Bookings -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-history"></i> Recent Bookings
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr><th>Booking ID</th><th>Service</th><th>Date</th><th>Status</th><th>Amount</th><th>Action</th></tr>
+                            </thead>
+                            <tbody id="recentBookingsTable">
+                                <tr><td colspan="6" class="text-center">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bookings Page -->
+        <div id="bookingsPage" style="display: none;">
+            <div class="card">
+                <div class="card-header"><i class="fas fa-calendar-check"></i> All My Bookings</div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead><tr><th>ID</th><th>Service</th><th>Vehicle</th><th>Date</th><th>Status</th><th>Amount</th><th>Action</th></tr></thead>
+                            <tbody id="allBookingsTable"><tr><td colspan="7" class="text-center">Loading...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Page -->
+        <div id="paymentPage" style="display: none;">
+            <div class="card">
+                <div class="card-header"><i class="fas fa-credit-card"></i> Make Payment</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3"><label>Select Booking</label><select id="paymentBooking" class="form-control"><option value="">Select a booking to pay</option></select></div>
+                            <div class="form-group mb-3"><label>Payment Method</label><select id="paymentMethod" class="form-control"><option value="QR">QR Code Scan (UPI)</option><option value="COD">Cash on Delivery</option></select></div>
+                            <div class="form-group mb-3"><label>Amount</label><input type="text" id="paymentAmount" class="form-control" readonly></div>
+                            <button id="payNowBtn" class="btn btn-success">Pay Now</button>
+                        </div>
+                        <div class="col-md-6 text-center" id="qrCodeContainer" style="display: none;">
+                            <h5>Scan QR Code to Pay</h5>
+                            <img id="qrCodeImg" src="" style="width: 200px; margin: 20px;">
+                            <p>Pay using any UPI app: Google Pay, PhonePe, Paytm</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Page -->
+        <div id="historyPage" style="display: none;">
+            <div class="card">
+                <div class="card-header"><i class="fas fa-history"></i> Service History</div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table"><thead><tr><th>Date</th><th>Service</th><th>Mechanic</th><th>Amount</th><th>Rating</th></tr></thead>
+                        <tbody id="historyTable"><tr><td colspan="5" class="text-center">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Page -->
+        <div id="profilePage" style="display: none;">
+            <div class="card">
+                <div class="card-header"><i class="fas fa-user"></i> My Profile</div>
+                <div class="card-body">
+                    <form id="profileForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3"><label>Full Name</label><input type="text" id="profileName" class="form-control" required></div>
+                            <div class="col-md-6 mb-3"><label>Email</label><input type="email" id="profileEmail" class="form-control" readonly></div>
+                            <div class="col-md-6 mb-3"><label>Phone</label><input type="tel" id="profilePhone" class="form-control" required></div>
+                            <div class="col-md-6 mb-3"><label>Address</label><input type="text" id="profileAddress" class="form-control"></div>
+                            <div class="col-md-6 mb-3"><label>Vehicle Make</label><input type="text" id="vehicleMake" class="form-control"></div>
+                            <div class="col-md-6 mb-3"><label>Vehicle Year</label><input type="number" id="vehicleYear" class="form-control"></div>
+                            <div class="col-md-12"><button type="submit" class="btn btn-primary">Update Profile</button></div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        if (!token) window.location.href = '/login';
+        
+        document.getElementById('userName').innerText = user.name || 'User';
+
+        // Navigation - FIXED: Skip external links
+        document.querySelectorAll('.sidebar nav a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                // ✅ If link has href starting with /pages, let browser handle it
+                if (link.getAttribute('href') && link.getAttribute('href').startsWith('/pages')) {
+                    return; // Do nothing, let browser navigate
+                }
+                
+                if (link.id === 'logoutBtn') { logout(); return; }
+                e.preventDefault();
+                document.querySelectorAll('.sidebar nav a').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+                const page = link.getAttribute('data-page');
+                document.getElementById('dashboardContent').style.display = page === 'dashboard' ? 'block' : 'none';
+                document.getElementById('bookingsPage').style.display = page === 'bookings' ? 'block' : 'none';
+                document.getElementById('paymentPage').style.display = page === 'payment' ? 'block' : 'none';
+                document.getElementById('historyPage').style.display = page === 'history' ? 'block' : 'none';
+                document.getElementById('profilePage').style.display = page === 'profile' ? 'block' : 'none';
+                if (page === 'bookings') loadAllBookings();
+                if (page === 'payment') loadPaymentBookings();
+                if (page === 'history') loadHistory();
+                if (page === 'profile') loadProfile();
+            });
+        });
+
+        async function fetchAPI(endpoint, method = 'GET', data = null) {
+            const options = { method, headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } };
+            if (data) options.body = JSON.stringify(data);
+            const response = await fetch(endpoint, options);
+            return response.json();
+        }
+
+        async function loadDashboard() {
+            const bookings = await fetchAPI('/api/user/bookings');
+            if (bookings.success) {
+                const pending = bookings.bookings.filter(b => b.status === 'pending').length;
+                const completed = bookings.bookings.filter(b => b.status === 'completed').length;
+                const total = bookings.bookings.length;
+                const spent = bookings.bookings.filter(b => b.paymentStatus === 'paid').reduce((sum, b) => sum + (b.finalCost || 0), 0);
+                document.getElementById('totalBookings').innerText = total;
+                document.getElementById('pendingBookings').innerText = pending;
+                document.getElementById('completedBookings').innerText = completed;
+                document.getElementById('totalSpent').innerText = '₹' + spent;
+                const recent = bookings.bookings.slice(0, 5);
+                document.getElementById('recentBookingsTable').innerHTML = recent.map(b => `
+                    <tr>
+                        <td>${b._id.slice(-6)}</td>
+                        <td>${b.serviceType}</td>
+                        <td>${new Date(b.preferredDate).toLocaleDateString()}</td>
+                        <td><span class="badge-${b.status}">${b.status}</span></td>
+                        <td>₹${b.estimatedCost || 0}</td>
+                        <td>
+                            <button class="btn btn-sm btn-info" onclick="viewBooking('${b._id}')">View</button>
+                            ${b.status !== 'cancelled' && b.status !== 'completed' ? `<button class="btn btn-sm btn-danger" onclick="cancelBooking('${b._id}')">Cancel</button>` : ''}
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        async function loadAllBookings() {
+            const bookings = await fetchAPI('/api/user/bookings');
+            if (bookings.success) {
+                document.getElementById('allBookingsTable').innerHTML = bookings.bookings.map(b => `
+                    <tr>
+                        <td>${b._id.slice(-6)}</td>
+                        <td>${b.serviceType}</td>
+                        <td>${b.vehicleModel}</td>
+                        <td>${new Date(b.preferredDate).toLocaleDateString()}</td>
+                        <td><span class="badge-${b.status}">${b.status}</span></td>
+                        <td>₹${b.estimatedCost || 0}</td>
+                        <td>
+                            ${b.status !== 'cancelled' && b.status !== 'completed' ? `<button class="btn btn-sm btn-danger" onclick="cancelBooking('${b._id}')">Cancel</button>` : '-'}
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        // Cancel Booking
+        window.cancelBooking = async function(bookingId) {
+            const result = await Swal.fire({
+                title: 'Cancel Booking?',
+                text: 'Are you sure?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Cancel'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/api/bookings/cancel/${bookingId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ reason: 'User requested cancellation' })
+                    });
+                    const data = await response.json();
+                    console.log('Cancel response:', data);
+                    
+                    if (data.success) {
+                        Swal.fire('Cancelled!', 'Booking cancelled successfully', 'success');
+                        loadAllBookings();
+                        loadDashboard();
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
+                } catch (error) {
+                    console.error('Cancel error:', error);
+                    Swal.fire('Error', 'Network error', 'error');
+                }
+            }
+        };
+
+        // Removed old booking form - using wizard now
+
+        async function loadPaymentBookings() {
+            const bookings = await fetchAPI('/api/user/bookings');
+            if (bookings.success) {
+                const pendingPayments = bookings.bookings.filter(b => b.paymentStatus === 'pending' && b.status !== 'cancelled');
+                document.getElementById('paymentBooking').innerHTML = '<option value="">Select a booking</option>' + pendingPayments.map(b => `<option value="${b._id}" data-amount="${b.estimatedCost}">${b._id.slice(-6)} - ${b.serviceType} - ₹${b.estimatedCost}</option>`).join('');
+            }
+        }
+
+        document.getElementById('paymentBooking')?.addEventListener('change', (e) => {
+            const selected = e.target.options[e.target.selectedIndex];
+            const amount = selected.getAttribute('data-amount');
+            document.getElementById('paymentAmount').value = amount ? '₹' + amount : '';
+        });
+
+        document.getElementById('payNowBtn')?.addEventListener('click', async () => {
+            const bookingId = document.getElementById('paymentBooking').value;
+            const method = document.getElementById('paymentMethod').value;
+            if (!bookingId) { Swal.fire('Error', 'Select a booking', 'error'); return; }
+            if (method === 'QR') {
+                const qr = await fetchAPI('/api/payments/generate-qr', 'POST', { amount: document.getElementById('paymentAmount').value.replace('₹', ''), bookingId });
+                if (qr.success) { document.getElementById('qrCodeContainer').style.display = 'block'; document.getElementById('qrCodeImg').src = qr.qrCode; }
+            } else {
+                const payment = await fetchAPI('/api/payments/process', 'POST', { bookingId, amount: parseFloat(document.getElementById('paymentAmount').value.replace('₹', '')), method: 'COD', transactionId: 'COD-' + Date.now() });
+                if (payment.success) Swal.fire('Success!', 'Payment successful!', 'success').then(() => location.reload());
+            }
+        });
+
+        async function loadHistory() {
+            const bookings = await fetchAPI('/api/user/bookings');
+            if (bookings.success) {
+                const completed = bookings.bookings.filter(b => b.status === 'completed');
+                document.getElementById('historyTable').innerHTML = completed.map(b => `<tr><td>${new Date(b.createdAt).toLocaleDateString()}</td><td>${b.serviceType}</td><td>${b.mechanicId?.name || 'Not assigned'}</td><td>₹${b.finalCost || b.estimatedCost}</td><td>${b.rating ? '⭐'.repeat(b.rating) : 'Not rated'}</td></tr>`).join('');
+            }
+        }
+
+        async function loadProfile() {
+            const profile = await fetchAPI('/api/user/profile');
+            if (profile.success) {
+                document.getElementById('profileName').value = profile.user.name;
+                document.getElementById('profileEmail').value = profile.user.email;
+                document.getElementById('profilePhone').value = profile.user.phone;
+                document.getElementById('profileAddress').value = profile.user.address?.street || '';
+                document.getElementById('vehicleMake').value = profile.user.vehicleDetails?.make || '';
+                document.getElementById('vehicleYear').value = profile.user.vehicleDetails?.year || '';
+            }
+        }
+
+        document.getElementById('profileForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = { name: document.getElementById('profileName').value, phone: document.getElementById('profilePhone').value, address: { street: document.getElementById('profileAddress').value }, vehicleDetails: { make: document.getElementById('vehicleMake').value, year: document.getElementById('vehicleYear').value } };
+            const result = await fetchAPI('/api/user/profile', 'PUT', data);
+            if (result.success) Swal.fire('Success!', 'Profile updated!', 'success');
+        });
+
+        document.getElementById('sosBtn')?.addEventListener('click', () => {
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const result = await fetchAPI('/api/sos/emergency', 'POST', { userId: user.id, location: { lat: pos.coords.latitude, lng: pos.coords.longitude }, bookingId: null });
+                if (result.success) Swal.fire('SOS Sent!', 'Help is on the way!', 'success');
+                else Swal.fire('Error', 'Failed to send SOS', 'error');
+            }, () => Swal.fire('Error', 'Enable location access', 'error'));
+        });
+
+        function viewBooking(id) { Swal.fire('Booking ID', id, 'info'); }
+        function logout() { localStorage.clear(); window.location.href = '/login'; }
+
+        loadDashboard();
+    </script>
+</body>
+</html>
